@@ -33,7 +33,7 @@ export function Nav() {
     <>
       <div className="bg-cream px-4 py-2 text-center text-sm text-ink">
         An independent interview project by Akash Ramasani. Not affiliated with Faire.{" "}
-        <a href={MEMO} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+        <a href={MEMO} target="_blank" rel="noreferrer" className="link">
           Read the memo
         </a>
       </div>

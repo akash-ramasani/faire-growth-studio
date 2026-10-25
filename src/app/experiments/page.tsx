@@ -155,7 +155,7 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
             </ul>
             <p className="mt-2 text-xs text-ink-soft">
               The next {brief.audience} page generated in the{" "}
-              <Link href="/pages" className="underline">
+              <Link href="/pages" className="link">
                 studio
               </Link>{" "}
               includes these in Claude&apos;s prompt.
@@ -209,7 +209,7 @@ function ExperimentsInner() {
       <div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
         <aside className="min-w-0 space-y-6">
           <div className="card p-4">
-            <p className="label">Tests</p>
+            <p className="section-title">Tests</p>
             {experiments.length === 0 && <p className="text-sm text-muted">No tests yet.</p>}
             <ul className="space-y-1">
               {experiments.map((e) => (
@@ -233,9 +233,9 @@ function ExperimentsInner() {
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <p className="label mb-0">Learning memory</p>
+              <p className="section-title mb-0">Learning memory</p>
               {learnings.length > 0 && (
-                <button className="text-xs text-muted underline" onClick={clearLearnings}>
+                <button className="link text-xs text-ink-soft" onClick={clearLearnings}>
                   Clear
                 </button>
               )}
@@ -244,8 +244,8 @@ function ExperimentsInner() {
             <ul className="mt-2 space-y-3">
               {learnings.map((l) => (
                 <li key={l.id} className="text-sm">
-                  <label className="flex gap-2">
-                    <input type="checkbox" className="mt-1" checked={l.active} onChange={(e) => setLearningActive(l.id, e.target.checked)} />
+                  <label className="flex cursor-pointer gap-3">
+                    <input type="checkbox" className="check mt-px" checked={l.active} onChange={(e) => setLearningActive(l.id, e.target.checked)} />
                     <span className={l.active ? "" : "text-muted line-through"}>
                       {l.text}
                       <span className="block text-xs text-muted">
@@ -268,7 +268,7 @@ function ExperimentsInner() {
               <p className="font-serif text-2xl">No experiments yet</p>
               <p className="mt-2 max-w-sm text-sm text-ink-soft">
                 Generate variants A and B in the{" "}
-                <Link href="/pages" className="underline">
+                <Link href="/pages" className="link">
                   studio
                 </Link>{" "}
                 and start a test, or spin up a quick demo test.

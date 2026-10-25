@@ -44,7 +44,7 @@ export default function Home() {
                 href="https://github.com/akash-ramasani/faire-growth-studio/blob/main/docs/build-vs-buy.md"
                 target="_blank"
                 rel="noreferrer"
-                className="underline underline-offset-4"
+                className="link"
               >
                 Read the build-vs-buy memo
               </a>

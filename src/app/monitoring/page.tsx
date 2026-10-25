@@ -82,7 +82,7 @@ export default function Monitoring() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[380px_1fr]">
         <div className="card p-5">
-          <p className="label">Eval pass rate by check</p>
+          <p className="section-title">Eval pass rate by check</p>
           {checkStats.size === 0 && <p className="mt-2 text-sm text-muted">Generate a page to see results.</p>}
           <div className="mt-3 space-y-3">
             {[...checkStats.entries()].map(([id, s]) => (
@@ -107,7 +107,7 @@ export default function Monitoring() {
         </div>
 
         <div className="card overflow-hidden">
-          <p className="label border-b border-line px-5 py-3">Recent runs ({audiences.length} audience, {pages.length} page)</p>
+          <p className="section-title mb-0 border-b border-line px-5 py-3">Recent runs ({audiences.length} audience, {pages.length} page)</p>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-muted">
@@ -129,7 +129,7 @@ export default function Monitoring() {
                       <td className="px-4 py-2">{r.kind}</td>
                       <td className="max-w-[220px] truncate px-4 py-2">{r.campaign}</td>
                       <td className="px-4 py-2">
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${bad ? "bg-warn-bg text-warn" : "bg-pass-bg text-pass"}`}>
+                        <span className={`rounded-[2px] px-1.5 text-xs leading-5 whitespace-nowrap ${bad ? "bg-warn-bg text-warn" : "bg-pass-bg text-pass"}`}>
                           {SOURCE_LABEL[r.source]}
                         </span>
                       </td>

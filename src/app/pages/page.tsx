@@ -224,14 +224,16 @@ export default function PagesStudio() {
                 </div>
               </div>
               <div>
-                <span className="label">Market</span>
-                <div className="grid grid-cols-4 gap-1.5">
+                <span className="label" id="market-label">Market</span>
+                <div className="segmented" role="radiogroup" aria-labelledby="market-label">
                   {LOCALES.map((l: Locale) => (
                     <button
                       key={l}
+                      role="radio"
+                      aria-checked={brief.locale === l}
                       onClick={() => set("locale", l)}
                       title={LOCALE_CONFIG[l].label}
-                      className={`pill pill-sm justify-center ${brief.locale === l ? "pill-active" : ""}`}
+                      className={`segment ${brief.locale === l ? "segment-active" : ""}`}
                     >
                       {LOCALE_CONFIG[l].flag}
                     </button>
@@ -251,13 +253,15 @@ export default function PagesStudio() {
                 <input id="offer" className="field" placeholder="e.g. Free shipping on qualifying orders" value={brief.offer} onChange={(e) => set("offer", e.target.value)} />
               </div>
               <div>
-                <span className="label">Tone</span>
-                <div className="flex flex-wrap gap-2">
+                <span className="label" id="tone-label">Tone</span>
+                <div className="segmented" role="radiogroup" aria-labelledby="tone-label">
                   {TONES.map((t) => (
                     <button
                       key={t}
+                      role="radio"
+                      aria-checked={brief.tone === t}
                       onClick={() => set("tone", t)}
-                      className={`pill pill-sm capitalize ${brief.tone === t ? "pill-active" : ""}`}
+                      className={`segment capitalize ${brief.tone === t ? "segment-active" : ""}`}
                     >
                       {t}
                     </button>
@@ -265,7 +269,7 @@ export default function PagesStudio() {
                 </div>
               </div>
               <div>
-                <span className="label">Focus categories (up to 4)</span>
+                <span className="label">Focus categories</span>
                 <div className="flex flex-wrap gap-1.5">
                   {CATEGORIES.map((c) => {
                     const on = brief.focusCategories.includes(c);
@@ -278,6 +282,7 @@ export default function PagesStudio() {
                             on ? brief.focusCategories.filter((x) => x !== c) : ([...brief.focusCategories, c].slice(-4) as Category[]),
                           )
                         }
+                        aria-pressed={on}
                         className={`pill pill-sm ${on ? "pill-active" : ""}`}
                       >
                         {c}
@@ -285,14 +290,15 @@ export default function PagesStudio() {
                     );
                   })}
                 </div>
+                <p className="help-text">Up to 4. The page features these first.</p>
               </div>
             </div>
             {allLearnings.length > 0 && (
-              <label className="mt-5 flex items-start gap-2 rounded-[4px] bg-sage/60 p-3 text-xs text-ink-soft">
-                <input type="checkbox" className="mt-0.5" checked={useLearned} onChange={(e) => setUseLearned(e.target.checked)} />
+              <label className="mt-5 flex cursor-pointer items-start gap-3 bg-cream p-3 text-sm leading-5">
+                <input type="checkbox" className="check mt-px" checked={useLearned} onChange={(e) => setUseLearned(e.target.checked)} />
                 <span>
                   Apply {relevantLearnings(allLearnings, brief).length} learning{relevantLearnings(allLearnings, brief).length === 1 ? "" : "s"} from past {brief.audience} tests.{" "}
-                  <Link href="/experiments" className="underline">
+                  <Link href="/experiments" className="link">
                     See them
                   </Link>
                 </span>
@@ -319,23 +325,34 @@ export default function PagesStudio() {
 
           {spec && (
             <div className="card p-5">
-              <p className="label">Edit hero</p>
-              <p className="mb-3 text-xs text-muted">Evals re-run on every keystroke.</p>
+              <p className="section-title mb-1">Edit hero</p>
+              <p className="help-text mt-0 mb-3">Evals re-run on every keystroke.</p>
               <div className="space-y-3">
-                <input aria-label="Headline" className="field" value={spec.hero.headline} onChange={(e) => editHero("headline", e.target.value)} />
-                <textarea aria-label="Subhead" rows={3} className="field resize-none" value={spec.hero.subhead} onChange={(e) => editHero("subhead", e.target.value)} />
-                <input aria-label="CTA label" className="field" value={spec.hero.ctaLabel} onChange={(e) => editHero("ctaLabel", e.target.value)} />
+                <div>
+                  <label className="label" htmlFor="hero-headline">Headline</label>
+                  <input id="hero-headline" className="field" value={spec.hero.headline} onChange={(e) => editHero("headline", e.target.value)} />
+                  <p className="help-text">{spec.hero.headline.length}/70 characters</p>
+                </div>
+                <div>
+                  <label className="label" htmlFor="hero-subhead">Subhead</label>
+                  <textarea id="hero-subhead" rows={3} className="field resize-none" value={spec.hero.subhead} onChange={(e) => editHero("subhead", e.target.value)} />
+                  <p className="help-text">{spec.hero.subhead.length}/160 characters</p>
+                </div>
+                <div>
+                  <label className="label" htmlFor="hero-cta">Button label</label>
+                  <input id="hero-cta" className="field" value={spec.hero.ctaLabel} onChange={(e) => editHero("ctaLabel", e.target.value)} />
+                </div>
               </div>
             </div>
           )}
 
           {published.length > 0 && (
             <div className="card p-5">
-              <p className="label">Published in this browser</p>
+              <p className="section-title">Published in this browser</p>
               <ul className="mt-2 space-y-2 text-sm">
                 {published.slice(0, 6).map((p) => (
                   <li key={p.spec.slug} className="flex items-center justify-between gap-2">
-                    <Link href={`/p/${p.spec.slug}`} className="truncate underline-offset-2 hover:underline">
+                    <Link href={`/p/${p.spec.slug}`} className="link truncate">
                       /p/{p.spec.slug}
                     </Link>
                     <span className="shrink-0 text-xs text-muted">{new Date(p.publishedAt).toLocaleDateString()}</span>
@@ -356,24 +373,26 @@ export default function PagesStudio() {
             <div className="card overflow-hidden">
               <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
                 {drafts.length > 1 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="segmented" role="tablist" aria-label="Drafts">
                     {drafts.map((d) => (
                       <button
                         key={d.key}
+                        role="tab"
+                        aria-selected={currentDraft?.key === d.key}
                         onClick={() => {
                           setActiveKey(d.key);
                           setEdited(null);
                         }}
-                        className={`pill pill-sm ${currentDraft?.key === d.key ? "pill-active" : ""}`}
+                        className={`segment ${currentDraft?.key === d.key ? "segment-active" : ""}`}
                       >
                         {d.label}
                       </button>
                     ))}
                   </div>
                 )}
-                <div className="flex gap-1 text-sm">
+                <div className="segmented" role="tablist" aria-label="View">
                   {(["preview", "evals", "json"] as const).map((t) => (
-                    <button key={t} onClick={() => setTab(t)} className={`rounded-[4px] px-3 py-1.5 capitalize ${tab === t ? "bg-cream font-medium" : "text-ink-soft"}`}>
+                    <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`segment capitalize ${tab === t ? "segment-active" : ""}`}>
                       {t === "json" ? "Spec" : t}
                     </button>
                   ))}
@@ -387,11 +406,11 @@ export default function PagesStudio() {
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-cream/60 px-4 py-2 text-xs text-ink-soft">
-                <span className={`rounded-full px-2 py-0.5 font-medium ${SOURCE_COPY[current.source].cls}`}>{SOURCE_COPY[current.source].label}</span>
-                {edited && <span className="rounded-full bg-white px-2 py-0.5 font-medium">Edited by marketer</span>}
+                <span className={`rounded-[2px] px-1.5 leading-5 ${SOURCE_COPY[current.source].cls}`}>{SOURCE_COPY[current.source].label}</span>
+                {edited && <span className="tag bg-white">Edited by marketer</span>}
                 <span>{LOCALE_CONFIG[current.spec.brief.locale].label}</span>
                 {currentDraft.learningsApplied > 0 && current.source !== "template_fallback" && (
-                  <span className="rounded-full bg-sage px-2 py-0.5 font-medium text-ink">{currentDraft.learningsApplied} learnings applied</span>
+                  <span className="tag bg-sage">{currentDraft.learningsApplied} learnings applied</span>
                 )}
                 <span>{(current.latencyMs / 1000).toFixed(1)}s</span>
                 <span>

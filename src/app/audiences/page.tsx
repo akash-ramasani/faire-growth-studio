@@ -53,10 +53,12 @@ const DESTS: Array<{ id: SyncDestination; label: string; consent: string }> = [
 ];
 
 const fmt = (n: number) => n.toLocaleString("en-US");
+// Display label for an enum value; the stored value keeps the contract spelling.
+const human = (v: string) => (/^[A-Z]{2}$/.test(v) ? v : v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, " "));
 
 function ValueInput({ attribute, operator, value, onChange }: { attribute: AttributeKey; operator: string; value: string; onChange: (v: string) => void }) {
   const def = ATTRIBUTES[attribute];
-  if (operator === "is_true" || operator === "is_false" || operator === "is_empty") return <div className="field bg-cream text-muted">no value</div>;
+  if (operator === "is_true" || operator === "is_false" || operator === "is_empty") return <div className="field flex items-center bg-grey text-ink-soft">No value needed</div>;
   if (def.type === "enum") {
     if (operator === "in" || operator === "not_in") {
       const selected = value.split(",").filter(Boolean);
@@ -71,7 +73,7 @@ function ValueInput({ attribute, operator, value, onChange }: { attribute: Attri
                 onClick={() => onChange((on ? selected.filter((s) => s !== v) : [...selected, v]).join(","))}
                 className={`pill pill-sm ${on ? "pill-active" : ""}`}
               >
-                {v}
+                {human(v)}
               </button>
             );
           })}
@@ -82,7 +84,9 @@ function ValueInput({ attribute, operator, value, onChange }: { attribute: Attri
       <select className="field" value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">Choose…</option>
         {def.values.map((v) => (
-          <option key={v}>{v}</option>
+          <option key={v} value={v}>
+            {human(v)}
+          </option>
         ))}
       </select>
     );
@@ -165,12 +169,23 @@ export default function Audiences() {
         <div className="min-w-0 space-y-6">
           <div className="card p-5">
             <label className="label" htmlFor="nl">Ask in plain English</label>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <input id="nl" className="field" value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => e.key === "Enter" && translate()} />
-              <button className="btn shrink-0" onClick={translate} disabled={translating || prompt.length < 5}>
+            <div className="search-pill">
+              <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-ink" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.3">
+                <circle cx="7" cy="7" r="5" />
+                <path d="m14 14-3.5-3.5" strokeLinecap="round" />
+              </svg>
+              <input
+                id="nl"
+                placeholder="e.g. US boutiques that haven't ordered in 90 days"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && translate()}
+              />
+              <button className="btn h-10 shrink-0 rounded-[20px]" onClick={translate} disabled={translating || prompt.length < 5}>
                 {translating ? "Translating…" : "Build rule"}
               </button>
             </div>
+            <p className="help-text mt-2">Claude proposes a rule; the data contract decides whether it is valid.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {PRESETS.map((p) => (
                 <button
@@ -204,10 +219,16 @@ export default function Audiences() {
 
           <div className="card p-5">
             <div className="mb-4 flex items-center justify-between">
-              <p className="label mb-0">Rule</p>
-              <div className="flex gap-2">
+              <p className="section-title mb-0">Rule</p>
+              <div className="segmented" role="radiogroup" aria-label="Combine conditions">
                 {(["and", "or"] as const).map((c) => (
-                  <button key={c} onClick={() => setDraft((d) => ({ ...d, combinator: c }))} className={`pill pill-sm ${draft.combinator === c ? "pill-active" : ""}`}>
+                  <button
+                    key={c}
+                    role="radio"
+                    aria-checked={draft.combinator === c}
+                    onClick={() => setDraft((d) => ({ ...d, combinator: c }))}
+                    className={`segment ${draft.combinator === c ? "segment-active" : ""}`}
+                  >
                     Match {c === "and" ? "all" : "any"}
                   </button>
                 ))}
@@ -242,9 +263,11 @@ export default function Audiences() {
                   <button
                     aria-label="Remove condition"
                     onClick={() => setDraft((d) => ({ ...d, conditions: d.conditions.filter((_, j) => j !== i) }))}
-                    className="h-9 px-2 text-lg text-muted hover:text-ink"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-[4px] text-ink hover:bg-white"
                   >
-                    ×
+                    <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                      <path d="m3 3 10 10M13 3 3 13" />
+                    </svg>
                   </button>
                 </div>
               ))}
@@ -266,8 +289,8 @@ export default function Audiences() {
               </div>
             )}
             {preview?.ok && (
-              <details className="mt-4 text-xs text-ink-soft">
-                <summary className="cursor-pointer">{preview.description}</summary>
+              <details className="mt-4 text-sm text-ink-soft">
+                <summary className="link cursor-pointer">{preview.description}</summary>
                 <pre className="mt-2 overflow-x-auto rounded-[4px] bg-cream p-3 text-[11px]">{preview.sql}</pre>
               </details>
             )}
@@ -275,7 +298,7 @@ export default function Audiences() {
 
           {summary && (
             <div className="card overflow-hidden">
-              <p className="label border-b border-line px-5 py-3">Sample members</p>
+              <p className="section-title mb-0 border-b border-line px-5 py-3">Sample members</p>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="text-xs text-muted">
@@ -292,7 +315,7 @@ export default function Audiences() {
                       <tr key={r.id}>
                         <td className="px-5 py-2 whitespace-nowrap">{r.storeName}</td>
                         <td className="px-5 py-2">{r.country}</td>
-                        <td className="px-5 py-2 whitespace-nowrap">{r.retailer_type}</td>
+                        <td className="px-5 py-2 whitespace-nowrap">{human(r.retailer_type)}</td>
                         <td className="px-5 py-2">{r.orders_last_90d}</td>
                         <td className="px-5 py-2">${fmt(r.gmv_last_365d)}</td>
                         <td className="px-5 py-2 whitespace-nowrap">{r.days_since_last_order === null ? "never" : `${r.days_since_last_order}d ago`}</td>
@@ -308,7 +331,7 @@ export default function Audiences() {
 
         <aside className="min-w-0 space-y-6">
           <div className="card p-5">
-            <p className="label">Audience size</p>
+            <p className="section-title">Audience size</p>
             <p className="font-serif text-5xl">{summary ? fmt(summary.size) : "–"}</p>
             <p className="mt-1 text-xs text-muted">{summary ? `${((summary.size / summary.total) * 100).toFixed(1)}% of ${fmt(summary.total)} retailers` : "Fix the rule to see a count"}</p>
             {summary && (
@@ -343,9 +366,11 @@ export default function Audiences() {
           </div>
 
           <div className="card p-5">
-            <p className="label">Sync (dry run)</p>
-            <input className="field" aria-label="Audience name" value={name} onChange={(e) => setName(e.target.value)} />
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <p className="section-title">Sync (dry run)</p>
+            <label className="label" htmlFor="aud-name">Audience name</label>
+            <input id="aud-name" className="field" value={name} onChange={(e) => setName(e.target.value)} />
+            <span className="label mt-4" id="dest-label">Destination</span>
+            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="dest-label">
               {DESTS.map((d) => (
                 <button
                   key={d.id}
@@ -353,10 +378,12 @@ export default function Audiences() {
                     setDest(d.id);
                     setPlan(null);
                   }}
-                  className={`rounded-[4px] border px-2 py-2 text-sm ${dest === d.id ? "border-ink bg-ink text-white" : "border-line text-ink hover:border-ink"}`}
+                  role="radio"
+                  aria-checked={dest === d.id}
+                  className={`option ${dest === d.id ? "option-active" : ""}`}
                 >
                   {d.label}
-                  <span className="block text-[11px] opacity-70">needs {d.consent}</span>
+                  <span className="block text-xs text-ink-soft">needs {d.consent}</span>
                 </button>
               ))}
             </div>

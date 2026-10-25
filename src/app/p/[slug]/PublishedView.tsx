@@ -33,7 +33,7 @@ export function PublishedView({ slug }: { slug: string }) {
         <span className="min-w-0 break-all">
           Demo preview of <strong>/{page.spec.slug}</strong>. CTA links to <span className="opacity-70">{page.spec.ctaUrl}</span>
         </span>
-        <Link href="/pages" className="underline">
+        <Link href="/pages" className="link">
           Back to studio
         </Link>
       </div>

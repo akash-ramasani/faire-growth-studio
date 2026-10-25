@@ -6,9 +6,9 @@ export function EvalSummary({ evals }: { evals: EvalResult[] }) {
   const passed = evals.filter((e) => e.passed).length;
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-      <span className="rounded-full bg-pass-bg px-2.5 py-1 text-pass">{passed} passed</span>
-      {blocking > 0 && <span className="rounded-full bg-fail-bg px-2.5 py-1 text-fail">{blocking} blocking</span>}
-      {warnings > 0 && <span className="rounded-full bg-warn-bg px-2.5 py-1 text-warn">{warnings} warning{warnings > 1 ? "s" : ""}</span>}
+      <span className="rounded-[2px] bg-pass-bg px-1.5 leading-5 text-pass">{passed} passed</span>
+      {blocking > 0 && <span className="rounded-[2px] bg-fail-bg px-1.5 leading-5 text-fail">{blocking} blocking</span>}
+      {warnings > 0 && <span className="rounded-[2px] bg-warn-bg px-1.5 leading-5 text-warn">{warnings} warning{warnings > 1 ? "s" : ""}</span>}
     </div>
   );
 }
@@ -31,7 +31,7 @@ export function EvalList({ evals }: { evals: EvalResult[] }) {
             <div className="min-w-0">
               <p className="text-sm font-medium">
                 {e.name}
-                <span className="ml-2 text-[11px] font-normal tracking-wide text-muted uppercase">{e.severity}</span>
+                <span className="tag ml-2 font-normal capitalize">{e.severity}</span>
               </p>
               <p className="mt-0.5 break-words text-xs text-ink-soft">{e.detail}</p>
             </div>

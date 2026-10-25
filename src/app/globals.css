@@ -67,14 +67,113 @@ body {
     font-weight: 400;
   }
 
+  /* Form controls, measured on Faire's sign-up modal via REA + CDP:
+     40px tall, 1px #DADADA border, 4px radius, 0 16px padding, 14/20 text,
+     placeholder #333 at 50%. Focus keeps the border and adds a 1px solid black outline. */
   .field {
-    @apply h-10 w-full rounded-[4px] border border-line bg-white px-3 text-sm text-ink outline-none transition focus:border-ink;
+    @apply h-10 w-full rounded-[4px] border border-line bg-white px-4 text-sm leading-5 text-ink transition-[outline-color] placeholder:text-ink/50;
+    outline: 1px solid transparent;
+  }
+  .field:focus,
+  .field:focus-visible {
+    outline-color: #000;
+  }
+  .field:disabled {
+    @apply cursor-not-allowed bg-grey text-ink-soft;
+  }
+  .field[aria-invalid="true"] {
+    @apply border-fail;
   }
   textarea.field {
     @apply h-auto py-2.5;
   }
+  /* Selects reuse the field box with Faire's thin chevron (as in "All categories"). */
+  select.field {
+    @apply cursor-pointer appearance-none pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' stroke='%23333' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 12px;
+  }
+  /* Form label: 14/20 regular, directly above the control. */
   .label {
-    @apply mb-1.5 block text-sm font-medium text-ink;
+    @apply mb-1 block text-sm leading-5 font-normal text-ink;
+  }
+  .help-text {
+    @apply mt-1 text-xs leading-4 text-ink-soft;
+  }
+  .error-text {
+    @apply mt-1 text-xs leading-4 text-fail;
+  }
+  /* Non-form panel headings (Faire's footer column heads: 14/20 medium). */
+  .section-title {
+    @apply mb-3 block text-sm leading-5 font-medium text-ink;
+  }
+  /* Checkboxes and radios: same hairline and #333 selected fill as the rest of the system. */
+  .check,
+  .radio {
+    @apply relative inline-block h-[18px] w-[18px] shrink-0 cursor-pointer appearance-none border border-line bg-white align-middle transition;
+    outline: 1px solid transparent;
+    outline-offset: 2px;
+  }
+  .check {
+    @apply rounded-[2px];
+  }
+  .radio {
+    @apply rounded-full;
+  }
+  .check:checked {
+    @apply border-ink bg-ink;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 8.5 2.5 2.5L12 5.5' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-size: 14px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .radio:checked {
+    @apply border-ink;
+    background: radial-gradient(circle, #333 0 4px, #fff 4.5px);
+  }
+  .check:focus-visible,
+  .radio:focus-visible {
+    outline-color: #000;
+  }
+  /* Faire's pill search: 52px on Help Center (25px radius), with the action inside the pill. */
+  .search-pill {
+    @apply flex h-[52px] w-full items-center gap-2 rounded-[26px] border border-line bg-white p-[5px] pl-5;
+    outline: 1px solid transparent;
+  }
+  .search-pill:focus-within {
+    outline-color: #000;
+  }
+  .search-pill input {
+    @apply h-full min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink/50;
+  }
+  /* Segmented control: Help Center's Retailers/Brands toggle. */
+  .segmented {
+    @apply inline-flex flex-wrap items-center gap-0.5 rounded-[50px] border border-line bg-white p-[2px];
+  }
+  .segment {
+    @apply inline-flex h-9 items-center rounded-[50px] px-4 text-sm leading-5 text-ink transition hover:bg-grey;
+  }
+  .segment-active {
+    @apply bg-ink text-white hover:bg-ink;
+  }
+  /* Selectable option card (radio-like), e.g. sync destinations. */
+  .option {
+    @apply rounded-[4px] border border-line bg-white px-3 py-2.5 text-left text-sm text-ink transition hover:border-ink;
+    outline: 1px solid transparent;
+  }
+  .option-active {
+    @apply border-ink;
+    outline-color: #333;
+  }
+  /* Help Center category tag: #F1F1F1, 2px radius. */
+  .tag {
+    @apply inline-flex items-center rounded-[2px] bg-[#f1f1f1] px-1.5 text-xs leading-5 text-ink;
+  }
+  /* Faire links: underlined, ~3px offset. */
+  .link {
+    @apply underline decoration-1 underline-offset-[3px] hover:text-black;
   }
   /* Primary: Faire's dark #333 button, 4px radius, 48px tall. */
   .btn {
