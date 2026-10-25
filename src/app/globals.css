@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --muted: #757575;
+  --line: #e6e2dc;
+  --paper: #ffffff;
+  --cream: #f7f4ef;
+  --sand: #efe7da;
+  --sage: #dfe5d8;
+  --clay: #ecd9cc;
+  --sky: #dbe4ea;
+  --pass: #2f6b4f;
+  --pass-bg: #e6f0ea;
+  --warn: #8a5a12;
+  --warn-bg: #fbf0dc;
+  --fail: #a33a2b;
+  --fail-bg: #f8e4e0;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-paper: var(--paper);
+  --color-cream: var(--cream);
+  --color-sand: var(--sand);
+  --color-sage: var(--sage);
+  --color-clay: var(--clay);
+  --color-sky: var(--sky);
+  --color-pass: var(--pass);
+  --color-pass-bg: var(--pass-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-fail: var(--fail);
+  --color-fail-bg: var(--fail-bg);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-serif-display);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.field {
+  @apply w-full rounded-[4px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-ink;
+}
+.label {
+  @apply mb-1.5 block text-xs font-medium tracking-wide text-ink-soft uppercase;
+}
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-[4px] bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-40;
+}
+.btn-outline {
+  @apply inline-flex items-center justify-center gap-2 rounded-[4px] border border-ink bg-white px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-40;
+}
+.card {
+  @apply rounded-[6px] border border-line bg-white;
+}
