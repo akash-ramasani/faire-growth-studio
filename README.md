@@ -101,6 +101,8 @@ Learnings are stored as patterns, not wording, so they carry over to new briefs 
 
 Every generation logs its path (first-pass / repaired / fallback), per-check eval results, latency and tokens. The server emits structured JSON log lines, and the `/monitoring` page shows first-pass, repair and fallback rates, p50/p95 latency, and pass rate by check. **Fallback rate and repair rate are the on-call signals.** A spike means the model, the prompt or an upstream dependency regressed.
 
+**Latest live run** (11 briefs, Claude Opus 5.5): 82% passed every blocking check first time, 18% passed after one repair, 0% fell back to the template. About $0.06 and ~19s (p50) per page. Adversarial briefs asking for guarantees came back compliant on the first pass.
+
 `npm run eval` runs a fixed brief set, including adversarial briefs that ask for guarantees or mismatch the audience, through the full pipeline. It fails if anything would ship with a blocking failure, or if the live first-pass rate drops below `EVAL_MIN_FIRST_PASS` (default 0.5). CI runs it on every push.
 
 ## Stack and production notes

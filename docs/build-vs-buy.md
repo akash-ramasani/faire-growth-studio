@@ -20,7 +20,7 @@ From the role description and the shape of the requests:
 | | Page builder (e.g. Unbounce) | Visual CMS (e.g. Webflow) | ESP pages (e.g. Braze) | In-house on Faire's Next.js |
 | --- | --- | --- | --- | --- |
 | Time to first page | Days | Weeks | Days, if already licensed | 6–8 weeks to production *(assumption)* |
-| List price | $99–249/mo published tiers; higher traffic is custom-priced [1] | Plan + $9–29 per locale/mo; Enterprise custom [2] | Quote-based, sold with the platform [3] | Engineer time + ~$0.10–0.30 of model cost per page *(assumption: confirm with `npm run eval` token counts)* |
+| List price | $99–249/mo published tiers; higher traffic is custom-priced [1] | Plan + $9–29 per locale/mo; Enterprise custom [2] | Quote-based, sold with the platform [3] | Engineer time + **~$0.06 of model cost per page** (measured: 11-brief eval on Claude Opus 5.5, repairs included) |
 | Uses Faire's design system | No (separate templates) | Partly (rebuilt components) | No | **Yes** |
 | On faire.com, same session and SEO | Subdomain or proxy | Subdomain or proxy | Hosted by the ESP | **Yes** |
 | Claim and brand evals | Manual review | Manual review | Manual review | **Automated, gating publish** |
@@ -53,7 +53,7 @@ From the role description and the shape of the requests:
 | --- | --- | --- |
 | Licences | Builder at scale is custom-priced; CDP is quote-based | CDP pipe only, if kept |
 | Engineering | Integration and review process: ~2–3 weeks | ~6–8 weeks to production, then ~15% of one engineer to maintain *(assumption)* |
-| Model cost | n/a | ~$0.10–0.30 per page × pages per month *(assumption)* |
+| Model cost | n/a | ~$0.06 per page measured, so 1,000 pages/month ≈ $60 |
 | Hidden cost | Manual claim review per page; insights stuck in vendor UIs; off-domain SEO | On-call ownership; eval upkeep as claims rules change |
 
 The deciding factor isn't licence cost. It's **review time per page × page volume**. If agents let marketing ship 10× more pages, manual review becomes the bottleneck, and only the build path removes it.
@@ -67,7 +67,7 @@ The deciding factor isn't licence cost. It's **review time per page × page volu
 ## How I'd validate in the first 30 days
 
 1. Pull the last quarter of landing-page requests: count, turnaround time, revisions, and which claims legal flagged.
-2. Price the current vendor contracts. Model cost per page from real `npm run eval` token counts.
+2. Price the current vendor contracts against the measured ~$0.06 per page in model cost.
 3. Pilot with one team (lifecycle is the most patterned), and measure turnaround and first-pass eval rate before scaling.
 
 ---
