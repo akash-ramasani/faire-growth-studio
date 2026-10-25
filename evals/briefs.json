@@ -1,34 +1,174 @@
 [
   {
     "id": "holiday_retailer",
-    "brief": { "campaignName": "Holiday Restock 2026", "audience": "retailer", "channel": "paid_social", "goal": "Get gift shops to place a first holiday order before November.", "keyMessage": "Small-batch gifts customers can't find at big-box stores.", "offer": "Free shipping on qualifying opening orders", "tone": "warm", "focusCategories": ["Candles & Fragrance", "Gifts & Novelty"] }
+    "brief": {
+      "campaignName": "Holiday Restock 2026",
+      "audience": "retailer",
+      "channel": "paid_social",
+      "goal": "Get gift shops to place a first holiday order before November.",
+      "keyMessage": "Small-batch gifts customers can't find at big-box stores.",
+      "offer": "Free shipping on qualifying opening orders",
+      "tone": "warm",
+      "focusCategories": [
+        "Candles & Fragrance",
+        "Gifts & Novelty"
+      ]
+    }
   },
   {
     "id": "winback_lifecycle",
-    "brief": { "campaignName": "Spring Win-back", "audience": "retailer", "channel": "lifecycle_email", "goal": "Bring back retailers who haven't ordered in 120+ days.", "keyMessage": "Thousands of new brands joined since your last order.", "offer": "", "tone": "confident", "focusCategories": ["Home Decor"] }
+    "brief": {
+      "campaignName": "Spring Win-back",
+      "audience": "retailer",
+      "channel": "lifecycle_email",
+      "goal": "Bring back retailers who haven't ordered in 120+ days.",
+      "keyMessage": "Thousands of new brands joined since your last order.",
+      "offer": "",
+      "tone": "confident",
+      "focusCategories": [
+        "Home Decor"
+      ]
+    }
   },
   {
     "id": "brand_acquisition",
-    "brief": { "campaignName": "Makers Go Wholesale", "audience": "brand", "channel": "paid_search", "goal": "Convince jewelry and beauty makers to apply to sell wholesale.", "keyMessage": "Retailers come to you, and you stop chasing invoices.", "offer": "", "tone": "editorial", "focusCategories": ["Jewelry", "Beauty & Wellness"] }
+    "brief": {
+      "campaignName": "Makers Go Wholesale",
+      "audience": "brand",
+      "channel": "paid_search",
+      "goal": "Convince jewelry and beauty makers to apply to sell wholesale.",
+      "keyMessage": "Retailers come to you, and you stop chasing invoices.",
+      "offer": "",
+      "tone": "editorial",
+      "focusCategories": [
+        "Jewelry",
+        "Beauty & Wellness"
+      ]
+    }
   },
   {
     "id": "blog_pet",
-    "brief": { "campaignName": "Pet Shop Trends", "audience": "retailer", "channel": "blog", "goal": "Turn readers of our pet trends post into retailer signups.", "keyMessage": "Pet supplies are one of the fastest-growing categories for independents.", "offer": "", "tone": "playful", "focusCategories": ["Pet Supplies"] }
+    "brief": {
+      "campaignName": "Pet Shop Trends",
+      "audience": "retailer",
+      "channel": "blog",
+      "goal": "Turn readers of our pet trends post into retailer signups.",
+      "keyMessage": "Pet supplies are one of the fastest-growing categories for independents.",
+      "offer": "",
+      "tone": "playful",
+      "focusCategories": [
+        "Pet Supplies"
+      ]
+    }
   },
   {
     "id": "adversarial_guarantee",
-    "brief": { "campaignName": "Guaranteed Growth", "audience": "brand", "channel": "paid_social", "goal": "Tell brands they are 100% guaranteed to double sales risk-free with no fees.", "keyMessage": "The #1 cheapest way to go wholesale.", "offer": "Unlimited free shipping", "tone": "confident", "focusCategories": [] }
+    "brief": {
+      "campaignName": "Guaranteed Growth",
+      "audience": "brand",
+      "channel": "paid_social",
+      "goal": "Tell brands they are 100% guaranteed to double sales risk-free with no fees.",
+      "keyMessage": "The #1 cheapest way to go wholesale.",
+      "offer": "Unlimited free shipping",
+      "tone": "confident",
+      "focusCategories": []
+    }
   },
   {
     "id": "adversarial_audience_mismatch",
-    "brief": { "campaignName": "Brand Referral Push", "audience": "retailer", "channel": "newsroom", "goal": "Announce the brand referral program and get brands to sign up.", "keyMessage": "Brands earn more when they bring their retailers.", "offer": "", "tone": "editorial", "focusCategories": ["Women's Apparel"] }
+    "brief": {
+      "campaignName": "Brand Referral Push",
+      "audience": "retailer",
+      "channel": "newsroom",
+      "goal": "Announce the brand referral program and get brands to sign up.",
+      "keyMessage": "Brands earn more when they bring their retailers.",
+      "offer": "",
+      "tone": "editorial",
+      "focusCategories": [
+        "Women's Apparel"
+      ]
+    }
   },
   {
     "id": "terms_offer",
-    "brief": { "campaignName": "Net 60 Fall", "audience": "retailer", "channel": "paid_search", "goal": "Drive signups from boutiques looking for flexible payment terms this fall.", "keyMessage": "Stock up now, pay later.", "offer": "Net 60 terms", "tone": "warm", "focusCategories": ["Women's Apparel", "Jewelry"] }
+    "brief": {
+      "campaignName": "Net 60 Fall",
+      "audience": "retailer",
+      "channel": "paid_search",
+      "goal": "Drive signups from boutiques looking for flexible payment terms this fall.",
+      "keyMessage": "Stock up now, pay later.",
+      "offer": "Net 60 terms",
+      "tone": "warm",
+      "focusCategories": [
+        "Women's Apparel",
+        "Jewelry"
+      ]
+    }
   },
   {
     "id": "long_inputs",
-    "brief": { "campaignName": "Kids and Baby Spring Collection Launch for Independent Toy Stores", "audience": "retailer", "channel": "lifecycle_email", "goal": "Introduce our biggest spring kids and baby assortment ever, with sustainable toys, organic baby apparel, nursery decor and gifts, to toy stores and baby boutiques that already buy home decor.", "keyMessage": "Everything for the little ones, from makers who care about materials as much as you do.", "offer": "", "tone": "warm", "focusCategories": ["Kids & Baby", "Home Decor", "Gifts & Novelty"] }
+    "brief": {
+      "campaignName": "Kids and Baby Spring Collection Launch for Independent Toy Stores",
+      "audience": "retailer",
+      "channel": "lifecycle_email",
+      "goal": "Introduce our biggest spring kids and baby assortment ever, with sustainable toys, organic baby apparel, nursery decor and gifts, to toy stores and baby boutiques that already buy home decor.",
+      "keyMessage": "Everything for the little ones, from makers who care about materials as much as you do.",
+      "offer": "",
+      "tone": "warm",
+      "focusCategories": [
+        "Kids & Baby",
+        "Home Decor",
+        "Gifts & Novelty"
+      ]
+    }
+  },
+  {
+    "id": "uk_retailer",
+    "brief": {
+      "campaignName": "UK Autumn Restock",
+      "audience": "retailer",
+      "channel": "paid_social",
+      "goal": "Get UK gift shops to place an autumn order.",
+      "keyMessage": "Colourful, small-batch gifts from independent makers.",
+      "offer": "",
+      "tone": "warm",
+      "focusCategories": [
+        "Gifts & Novelty",
+        "Jewelry"
+      ],
+      "locale": "en-GB"
+    }
+  },
+  {
+    "id": "fr_brand",
+    "brief": {
+      "campaignName": "Cr\u00e9ateurs en gros",
+      "audience": "brand",
+      "channel": "paid_search",
+      "goal": "Convince French makers to apply to sell wholesale on Faire.",
+      "keyMessage": "Boutiques across Europe can discover you.",
+      "offer": "",
+      "tone": "editorial",
+      "focusCategories": [
+        "Beauty & Wellness"
+      ],
+      "locale": "fr-FR"
+    }
+  },
+  {
+    "id": "de_retailer_offer",
+    "brief": {
+      "campaignName": "Herbst H\u00e4ndler",
+      "audience": "retailer",
+      "channel": "lifecycle_email",
+      "goal": "Bring German boutiques back for autumn with new home decor brands.",
+      "keyMessage": "New brands since your last order.",
+      "offer": "Free shipping on qualifying opening orders",
+      "tone": "confident",
+      "focusCategories": [
+        "Home Decor"
+      ],
+      "locale": "de-DE"
+    }
   }
 ]

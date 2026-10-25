@@ -82,3 +82,11 @@ describe("untrusted brief input", () => {
     expect(failedIds(spec)).toEqual([]);
   });
 });
+
+it("returns a fresh copy of the template every time", () => {
+  const first = page();
+  first.closing.headline = "mutated";
+  first.valueProps[0].title = "mutated";
+  expect(page().closing.headline).not.toBe("mutated");
+  expect(page().valueProps[0].title).not.toBe("mutated");
+});

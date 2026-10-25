@@ -2,6 +2,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { describeError, getClient, MODEL } from "../claude";
 import { DESTINATIONS, TESTIMONIALS } from "./catalog";
 import { assembleSpec } from "./build";
+import { LOCALE_CONFIG } from "./locale";
 import { blockingFailures, runEvals } from "./evals";
 import { PageCopySchema, type Brief, type EvalResult, type GenerationResult, type PageCopy } from "./schema";
 import { templateCopy } from "./template";
@@ -17,6 +18,7 @@ Hard rules (pages that break these are rejected automatically):
 - Pick a destination and testimonialId that match the brief's audience. You may not write testimonials.
 - Exactly 3 valueProps, 3-4 categories with no duplicates, 3-4 FAQs. Include the brief's focus categories.
 - No placeholders, brackets or template variables.
+- Non-English markets: the same claim rules apply in that language (e.g. "garanti", "garantiert"), and only that market's currency may appear.
 
 Destinations: ${Object.entries(DESTINATIONS)
   .map(([k, d]) => `${k} (${d.audience}: ${d.label})`)
@@ -25,8 +27,12 @@ Testimonials: ${Object.entries(TESTIMONIALS)
   .map(([k, t]) => `${k} (${t.audience}): "${t.quote}"`)
   .join("; ")}`;
 
-function briefPrompt(brief: Brief, variantHint?: string): string {
+export type GenerateOptions = { variantHint?: string; learnings?: string[] };
+
+function briefPrompt(brief: Brief, { variantHint, learnings = [] }: GenerateOptions = {}): string {
+  const market = LOCALE_CONFIG[brief.locale];
   return [
+    `Market: ${market.label}. Write every customer-facing string in ${market.language}. ${market.promptNotes}`,
     `Campaign: ${brief.campaignName}`,
     `Audience: ${brief.audience}`,
     `Channel: ${brief.channel}`,
@@ -36,6 +42,8 @@ function briefPrompt(brief: Brief, variantHint?: string): string {
     `Tone: ${brief.tone}`,
     brief.focusCategories.length > 0 && `Focus categories: ${brief.focusCategories.join(", ")}`,
     variantHint && `Variant direction: ${variantHint}`,
+    learnings.length > 0 &&
+      `What has won in past A/B tests for similar pages (apply where it fits the brief, don't copy wording):\n${learnings.map((l) => `- ${l}`).join("\n")}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -62,8 +70,8 @@ async function callClaude(content: string): Promise<Attempt> {
   };
 }
 
-function repairPrompt(brief: Brief, copy: PageCopy, failures: EvalResult[], variantHint?: string): string {
-  return `${briefPrompt(brief, variantHint)}
+function repairPrompt(brief: Brief, copy: PageCopy, failures: EvalResult[], opts: GenerateOptions): string {
+  return `${briefPrompt(brief, opts)}
 
 Your previous draft failed these automated checks:
 ${failures.map((f) => `- ${f.name}: ${f.detail}`).join("\n")}
@@ -78,14 +86,14 @@ Return a corrected page. Change only what is needed to pass the checks.`;
  * Brief -> Claude draft -> evals -> (one repair attempt) -> template fallback.
  * The returned page always passes blocking evals; `source` records which path produced it.
  */
-export async function generatePage(brief: Brief, variantHint?: string): Promise<GenerationResult> {
+export async function generatePage(brief: Brief, opts: GenerateOptions = {}): Promise<GenerationResult> {
   const started = Date.now();
   const usage = { inputTokens: 0, outputTokens: 0 };
   let attempts = 0;
   let fallbackReason: string;
 
   const fallback = (reason: string): GenerationResult => {
-    const spec = assembleSpec(templateCopy(brief), brief);
+    const spec = assembleSpec(templateCopy(brief, opts.variantHint ? "B" : "A"), brief);
     return {
       spec,
       evals: runEvals(spec),
@@ -102,7 +110,7 @@ export async function generatePage(brief: Brief, variantHint?: string): Promise<
 
   try {
     attempts++;
-    const first = await callClaude(briefPrompt(brief, variantHint));
+    const first = await callClaude(briefPrompt(brief, opts));
     usage.inputTokens += first.usage.inputTokens;
     usage.outputTokens += first.usage.outputTokens;
     let spec = assembleSpec(first.copy, brief);
@@ -113,7 +121,7 @@ export async function generatePage(brief: Brief, variantHint?: string): Promise<
     }
 
     attempts++;
-    const repaired = await callClaude(repairPrompt(brief, first.copy, failures, variantHint));
+    const repaired = await callClaude(repairPrompt(brief, first.copy, failures, opts));
     usage.inputTokens += repaired.usage.inputTokens;
     usage.outputTokens += repaired.usage.outputTokens;
     spec = assembleSpec(repaired.copy, brief);

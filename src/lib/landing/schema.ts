@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CATEGORIES, CHANNELS, DESTINATION_KEYS, ICONS, PALETTES, TESTIMONIAL_IDS, TONES } from "./catalog";
+import { LOCALES } from "./locale";
 
 // What a marketer fills in. This is the only free-form input to the system.
 export const BriefSchema = z.object({
@@ -11,6 +12,7 @@ export const BriefSchema = z.object({
   offer: z.string().max(200).default(""),
   tone: z.enum(TONES).default("warm"),
   focusCategories: z.array(z.enum(CATEGORIES)).max(4).default([]),
+  locale: z.enum(LOCALES).default("en-US"),
 });
 export type Brief = z.infer<typeof BriefSchema>;
 

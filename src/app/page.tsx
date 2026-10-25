@@ -4,9 +4,10 @@ const PIPELINE = [
   { step: "Brief", body: "Marketer fills a short form. The only free-form input." },
   { step: "Claude", body: "Writes copy into a typed schema. Picks from approved destinations, categories and quotes." },
   { step: "Code", body: "Builds URLs and UTMs. Attribution never depends on the model." },
-  { step: "Evals", body: "Up to 12 deterministic checks: claims, qualifiers, lengths, audience fit, tracking, alt text." },
+  { step: "Evals", body: "Up to 15 deterministic checks per market: claims, qualifiers, lengths, audience fit, tracking, alt text." },
   { step: "Repair", body: "Blocking failures go back to Claude once, with the exact reasons." },
   { step: "Fallback", body: "Still failing, or API down? Serve the approved template. Never a blank page." },
+  { step: "Learn", body: "A/B test variants, call winners with a stopping rule, and feed what won into the next prompt." },
 ];
 
 const PRINCIPLES = [
@@ -36,11 +37,19 @@ export default function Home() {
                 Build an audience
               </Link>
             </div>
+            <a
+              href="https://github.com/akash-ramasani/faire-growth-studio/blob/main/docs/build-vs-buy.md"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 inline-block text-sm text-ink-soft underline underline-offset-4 hover:text-ink"
+            >
+              Read the build-vs-buy memo →
+            </a>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
               { k: "1 brief", v: "to a published page", bg: "bg-sand" },
-              { k: "12 checks", v: "before publish", bg: "bg-sage" },
+              { k: "15 checks", v: "before publish", bg: "bg-sage" },
               { k: "0 tickets", v: "for an audience sync", bg: "bg-clay" },
               { k: "100%", v: "consent enforced in code", bg: "bg-sky" },
             ].map((s) => (
@@ -55,7 +64,7 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
         <h2 className="font-serif text-3xl">How a landing page gets made</h2>
-        <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
           {PIPELINE.map((p, i) => (
             <li key={p.step} className="card relative p-4">
               <span className="text-xs text-muted">0{i + 1}</span>
@@ -67,12 +76,18 @@ export default function Home() {
       </section>
 
       <section className="border-t border-line">
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 md:grid-cols-2">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 md:grid-cols-3">
           <Link href="/pages" className="card group p-6 transition hover:border-ink">
             <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">Landing page service</p>
             <p className="mt-2 font-serif text-2xl">Brief → eval-gated page, with A/B variants</p>
-            <p className="mt-2 text-sm text-ink-soft">For blog, newsroom, lifecycle and paid teams. Edit inline and the evals re-run as you type. Publishing is blocked until they pass.</p>
+            <p className="mt-2 text-sm text-ink-soft">For blog, newsroom, lifecycle and paid teams, in US, UK, French and German markets. Edit inline and the evals re-run as you type. Publishing is blocked until they pass.</p>
             <span className="mt-4 inline-block text-sm font-medium underline-offset-4 group-hover:underline">Open the studio →</span>
+          </Link>
+          <Link href="/experiments" className="card group p-6 transition hover:border-ink">
+            <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">Experiment learning loop</p>
+            <p className="mt-2 font-serif text-2xl">A/B results → learnings → better next page</p>
+            <p className="mt-2 text-sm text-ink-soft">Bayesian readout with a peeking guard. Winning patterns (not exact wording) become memory that Claude uses for the same audience.</p>
+            <span className="mt-4 inline-block text-sm font-medium underline-offset-4 group-hover:underline">Open experiments →</span>
           </Link>
           <Link href="/audiences" className="card group p-6 transition hover:border-ink">
             <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">Self-serve audiences</p>

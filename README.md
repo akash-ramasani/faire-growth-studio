@@ -2,8 +2,12 @@
 
 A working prototype of the two "what you'll build first" problems from Faire's **Growth Platform, Marketing Engineer** role:
 
-1. **Marketing-led landing pages:** a self-serve, agentic landing page service. A marketer writes a brief and gets an on-brand, eval-gated page with A/B variants.
+1. **Marketing-led landing pages:** a self-serve, agentic landing page service. A marketer writes a brief and gets an on-brand, eval-gated page with A/B variants, in US, UK, French and German markets.
 2. **Self-serve audiences and attributes:** marketers describe an audience in plain English. A typed data contract validates it, it compiles to SQL, and it syncs to Braze, Meta or Google with consent enforced in code.
+
+It also covers one item from the role's "on our radar" list: **a learning loop for generative assets**. A/B results become learnings that feed the next generation.
+
+**Strategy:** [Build vs. buy memo](docs/build-vs-buy.md). It recommends building the generation and eval layer in-house and buying the sync pipes, with costs and what would change the call.
 
 It follows the role's working principles: put agents into the patterned work, with **an eval harness, monitoring and a defined failure mode before anything reaches a customer**.
 
@@ -20,7 +24,7 @@ npm run dev                  # http://localhost:3000
 The app works without a key. Landing pages then come from the approved template, which *is* the defined failure path, so the full flow is still visible. With a key, Claude (`claude-opus-5-5` by default, override with `ANTHROPIC_MODEL`) writes the copy and translates audience descriptions.
 
 ```bash
-npm test          # unit tests: evals, data contract, consent, fallback
+npm test          # 47 unit tests: evals, markets, data contract, consent, stats, fallback
 npm run eval      # offline regression suite over evals/briefs.json
 npm run lint && npm run typecheck && npm run build
 ```
@@ -57,10 +61,33 @@ Brief ──▶ Claude (structured output) ──▶ code adds URL + UTMs ──
 | Descriptive hero alt text | blocking |
 | Reads at Flesch-Kincaid grade ≤ 9 | warning |
 | Brief's offer and focus categories appear | warning |
+| Copy is in the market's language (function-word check) | blocking |
+| Only the market's currency appears | blocking |
+| British spelling on UK pages | blocking |
 
 **Defined failure mode.** Blocking failures get one repair round, where Claude receives the exact failing checks. If that still fails, or if the API errors, refuses, or no key is set, the marketer gets the approved template. Every result shows which path produced it and why. The brief itself is treated as untrusted: the eval suite caught the template pasting a non-compliant offer ("Unlimited free shipping") into the fallback page, so the template now runs brief text through the same claim checks.
 
 **Publishing is gated.** The Publish button is disabled while any blocking check fails, including after a marketer's inline edits.
+
+## Markets
+
+Each brief targets a market: `en-US`, `en-GB`, `fr-FR` or `de-DE` ([`locale.ts`](src/lib/landing/locale.ts)). "Localize to all markets" generates the other three from the same brief.
+
+- **Compliance is per language.** French and German have their own banned-claim and qualifier rules ("garanti", "risikofrei", "livraison gratuite" without a qualifier), because a translated guarantee is still a guarantee.
+- **Market-correct output.** Currency, spelling (UK), CTA paths (`/en-gb`, `/fr-fr`, `/de-de`) and category labels come from code.
+- **Reviewed fallbacks per market.** The template fallback has approved copy for every market and never machine-translates at request time.
+
+## Experiment learning loop
+
+`/experiments` closes the loop from generated pages to better generated pages ([`src/lib/experiments`](src/lib/experiments)):
+
+1. Start an A/B test from two variants in the studio.
+2. Traffic is **simulated**: each arm has a hidden true conversion rate based on page features plus noise. In production this comes from the warehouse, joined on `utm_content`.
+3. **Bayesian readout** (Beta posteriors): P(B beats A), lift and credible intervals. The stopping rule guards against peeking: at least 1,500 visitors per arm and 95% confidence, or stop at 21 days with no winner.
+4. Concluding a test with a winner extracts **interpretable differences** ("Leading with payment terms beat leading with product discovery") into a learning memory scoped by audience and channel.
+5. The next generation for that audience sends those learnings to Claude. Marketers can switch individual learnings off.
+
+Learnings are stored as patterns, not wording, so they carry over to new briefs instead of overfitting to one headline.
 
 ## Self-serve audiences
 

@@ -1,27 +1,9 @@
 import { DESTINATIONS, TESTIMONIALS } from "./catalog";
+import { languageScore, LOCALE_CONFIG, US_SPELLINGS, type Locale } from "./locale";
 import { PageCopySchema, type EvalResult, type PageSpec } from "./schema";
 
 // Deterministic guardrails that run on every generated page before a marketer can publish.
 // "blocking" failures trigger a repair attempt, then the template fallback; "warning"s are surfaced.
-
-const BANNED = [
-  { re: /\bguarantee(d|s)?\b/i, why: "guarantee language" },
-  { re: /\brisk[- ]free\b/i, why: "risk-free claim" },
-  { re: /#1|\bnumber one\b/i, why: "unsubstantiated #1 claim" },
-  { re: /\bbest in the world\b/i, why: "superlative claim" },
-  { re: /\bcheapest\b/i, why: "price superlative" },
-  { re: /\b100%/i, why: "absolute claim" },
-  { re: /\bno fees\b|\bfee[- ]free\b/i, why: "fee claim" },
-  { re: /\bunlimited\b/i, why: "unlimited claim" },
-  { re: /\bovernight\b/i, why: "outcome-timing claim" },
-];
-
-// Claims that are allowed only with an approved qualifier in the same piece of copy.
-const QUALIFIED = [
-  { claim: /\bfree shipping\b/i, qualifier: /\b(minimum|qualifying|eligible|over \$)/i, name: "free shipping" },
-  { claim: /\bfree returns\b/i, qualifier: /\b(opening order|eligible|first order)/i, name: "free returns" },
-  { claim: /\bnet ?60\b/i, qualifier: /\b(eligible|approved|qualifying|terms)/i, name: "Net 60" },
-];
 
 const LIMITS: Array<[string, (s: PageSpec) => string[], number]> = [
   ["hero.headline", (s) => [s.hero.headline], 70],
@@ -36,10 +18,12 @@ const LIMITS: Array<[string, (s: PageSpec) => string[], number]> = [
 ];
 
 // Claim checks on a single string, reused by the template so brief text can't smuggle claims in.
-export function claimViolations(text: string): string[] {
+// Rules come from the market config: compliance review is per language.
+export function claimViolations(text: string, locale: Locale = "en-US"): string[] {
+  const { banned, qualified } = LOCALE_CONFIG[locale];
   return [
-    ...BANNED.filter((b) => b.re.test(text)).map((b) => b.why),
-    ...QUALIFIED.filter((q) => q.claim.test(text) && !q.qualifier.test(text)).map((q) => `unqualified ${q.name}`),
+    ...banned.filter((b) => b.re.test(text)).map((b) => b.why),
+    ...qualified.filter((q) => q.claim.test(text) && !q.qualifier.test(text)).map((q) => `unqualified ${q.name}`),
   ];
 }
 
@@ -118,10 +102,12 @@ export function runEvals(spec: PageSpec): EvalResult[] {
 
   const copy = allCopy(spec);
   const joined = copy.join(" \n ");
-  const banned = BANNED.filter((b) => b.re.test(joined)).map((b) => `${b.why} ("${joined.match(b.re)?.[0]}")`);
+  const locale = spec.brief.locale;
+  const market = LOCALE_CONFIG[locale];
+  const banned = market.banned.filter((b) => b.re.test(joined)).map((b) => `${b.why} ("${joined.match(b.re)?.[0]}")`);
   add("claims", "No prohibited marketing claims", "blocking", banned.length === 0, banned.join("; ") || "No guarantee, superlative or fee claims");
 
-  const unqualified = QUALIFIED.filter((q) => copy.some((t) => q.claim.test(t) && !q.qualifier.test(t))).map((q) => q.name);
+  const unqualified = market.qualified.filter((q) => copy.some((t) => q.claim.test(t) && !q.qualifier.test(t))).map((q) => q.name);
   add(
     "qualifiers",
     "Offer claims carry required qualifiers",
@@ -141,10 +127,32 @@ export function runEvals(spec: PageSpec): EvalResult[] {
     spec.hero.imageAlt.trim().length >= 12 ? spec.hero.imageAlt : "Alt text too short",
   );
 
-  const grade = fleschKincaidGrade([spec.hero.headline, spec.hero.subhead, ...spec.valueProps.map((v) => v.body)].join(". "));
-  add("readability", "Reads at grade 9 or below", "warning", grade <= 9, `Flesch-Kincaid grade ${grade.toFixed(1)}`);
+  const prose = [spec.hero.subhead, ...spec.valueProps.map((v) => v.body), ...spec.faq.map((f) => f.answer)].join(" ");
+  const score = languageScore(prose, locale);
+  add("language", `Copy is in ${market.language}`, "blocking", score >= 0.6, `${Math.round(score * 100)}% of function words match ${market.language}`);
 
-  if (spec.brief.offer.trim()) {
+  const wrongCurrency = copy.filter((t) => market.foreignCurrency.test(t));
+  add(
+    "currency",
+    `Prices use ${market.currency.code}`,
+    "blocking",
+    wrongCurrency.length === 0,
+    wrongCurrency.length ? `Foreign currency in: "${wrongCurrency[0]}"` : `No currency other than ${market.currency.symbol}`,
+  );
+
+  if (locale === "en-GB") {
+    const us = joined.match(US_SPELLINGS);
+    add("spelling", "British spelling", "blocking", !us, us ? `American spelling: "${us[0]}"` : "No American spellings found");
+  }
+
+  // Readability and offer-keyword matching are English-only heuristics; other markets skip them.
+  const english = locale.startsWith("en");
+  if (english) {
+    const grade = fleschKincaidGrade([spec.hero.headline, spec.hero.subhead, ...spec.valueProps.map((v) => v.body)].join(". "));
+    add("readability", "Reads at grade 9 or below", "warning", grade <= 9, `Flesch-Kincaid grade ${grade.toFixed(1)}`);
+  }
+
+  if (english && spec.brief.offer.trim()) {
     const keywords = spec.brief.offer.toLowerCase().match(/[a-z0-9$%]{4,}/g) ?? [];
     const hit = keywords.length === 0 || keywords.some((k) => joined.toLowerCase().includes(k));
     add("offer", "Brief's offer appears in the copy", "warning", hit, hit ? "Offer is referenced" : `None of: ${keywords.join(", ")}`);

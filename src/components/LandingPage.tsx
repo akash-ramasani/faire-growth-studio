@@ -1,4 +1,5 @@
 import { TESTIMONIALS, type Icon, type Palette } from "@/lib/landing/catalog";
+import { CATEGORY_LABELS, LOCALE_CONFIG, TESTIMONIAL_TRANSLATIONS } from "@/lib/landing/locale";
 import type { PageSpec } from "@/lib/landing/schema";
 
 const PALETTE: Record<Palette, { bg: string; a: string; b: string; c: string }> = {
@@ -85,10 +86,13 @@ function Cta({ label, dark, href }: { label: string; dark?: boolean; href?: stri
 }
 
 export function LandingPage({ spec, interactive = false }: { spec: PageSpec; interactive?: boolean }) {
+  const locale = spec.brief.locale ?? "en-US";
+  const ui = LOCALE_CONFIG[locale].ui;
   const t = TESTIMONIALS[spec.testimonialId];
+  const quote = locale === "fr-FR" || locale === "de-DE" ? TESTIMONIAL_TRANSLATIONS[locale][spec.testimonialId] : t.quote;
   const href = interactive ? spec.ctaUrl : undefined;
   return (
-    <div className="@container bg-white text-ink">
+    <div lang={locale} className="@container bg-white text-ink">
       <section className="grid items-center gap-8 px-6 py-12 @3xl:grid-cols-2 @3xl:px-12 @3xl:py-16">
         <div>
           <p className="mb-4 text-xs font-medium tracking-[0.14em] text-ink-soft uppercase">{spec.hero.eyebrow}</p>
@@ -118,12 +122,12 @@ export function LandingPage({ spec, interactive = false }: { spec: PageSpec; int
       </section>
 
       <section className="bg-cream px-6 py-12 @3xl:px-12">
-        <h2 className="mb-6 font-serif text-2xl @3xl:text-3xl">Shop by category</h2>
+        <h2 className="mb-6 font-serif text-2xl @3xl:text-3xl">{ui.categories}</h2>
         <div className={`grid grid-cols-2 gap-4 ${spec.categories.length === 3 ? "@3xl:grid-cols-3" : "@3xl:grid-cols-4"}`}>
           {spec.categories.map((c, i) => (
             <div key={c.name} className="overflow-hidden rounded-[6px] bg-white">
               <div className="flex aspect-[4/3] items-end p-4" style={{ background: TILE[i % TILE.length] }}>
-                <span className="font-serif text-lg leading-tight">{c.name}</span>
+                <span className="font-serif text-lg leading-tight">{CATEGORY_LABELS[locale][c.name]}</span>
               </div>
               <p className="p-4 text-sm leading-snug text-ink-soft">{c.blurb}</p>
             </div>
@@ -132,14 +136,14 @@ export function LandingPage({ spec, interactive = false }: { spec: PageSpec; int
       </section>
 
       <section className="px-6 py-14 text-center @3xl:px-12">
-        <blockquote className="mx-auto max-w-2xl font-serif text-2xl leading-snug @3xl:text-[28px]">“{t.quote}”</blockquote>
+        <blockquote className="mx-auto max-w-2xl font-serif text-2xl leading-snug @3xl:text-[28px]">“{quote}”</blockquote>
         <p className="mt-5 text-sm text-ink-soft">
           {t.name}, {t.store} · {t.city}
         </p>
       </section>
 
       <section className="border-t border-line px-6 py-12 @3xl:px-12">
-        <h2 className="mb-6 font-serif text-2xl @3xl:text-3xl">Questions, answered</h2>
+        <h2 className="mb-6 font-serif text-2xl @3xl:text-3xl">{ui.faq}</h2>
         <div className="divide-y divide-line border-y border-line">
           {spec.faq.map((f, i) => (
             <details key={i} className="group py-4" open={i === 0}>
