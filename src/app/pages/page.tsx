@@ -171,11 +171,11 @@ export default function PagesStudio() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-8">
       <div className="mb-8 flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
-          <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">Landing page service</p>
-          <h1 className="mt-1 font-serif text-3xl md:text-4xl">From brief to live page, without a ticket</h1>
+          <p className="text-sm text-ink-soft">Landing page service</p>
+          <h1 className="mt-1 font-serif text-[30px] leading-[38px] md:text-[38px] md:leading-[50px]">From brief to live page, without a ticket</h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-soft">
             Claude writes the copy against a typed schema and approved catalogs. Code adds tracking. Evals gate publishing. If anything fails, the approved
             template takes over.
@@ -191,8 +191,8 @@ export default function PagesStudio() {
                 <button
                   key={p.label}
                   onClick={() => setBrief(p.brief)}
-                  className={`rounded-full border px-3 py-1 text-xs transition ${
-                    brief.campaignName === p.brief.campaignName ? "border-ink bg-ink text-white" : "border-line text-ink-soft hover:border-ink"
+                  className={`pill pill-sm ${
+                    brief.campaignName === p.brief.campaignName ? "pill-active" : ""
                   }`}
                 >
                   {p.label}
@@ -231,7 +231,7 @@ export default function PagesStudio() {
                       key={l}
                       onClick={() => set("locale", l)}
                       title={LOCALE_CONFIG[l].label}
-                      className={`rounded-[4px] border px-2 py-1.5 text-xs transition ${brief.locale === l ? "border-ink bg-cream font-medium" : "border-line text-ink-soft"}`}
+                      className={`pill pill-sm justify-center ${brief.locale === l ? "pill-active" : ""}`}
                     >
                       {LOCALE_CONFIG[l].flag}
                     </button>
@@ -257,7 +257,7 @@ export default function PagesStudio() {
                     <button
                       key={t}
                       onClick={() => set("tone", t)}
-                      className={`rounded-[4px] border px-3 py-1.5 text-xs capitalize transition ${brief.tone === t ? "border-ink bg-cream font-medium" : "border-line text-ink-soft"}`}
+                      className={`pill pill-sm capitalize ${brief.tone === t ? "pill-active" : ""}`}
                     >
                       {t}
                     </button>
@@ -278,7 +278,7 @@ export default function PagesStudio() {
                             on ? brief.focusCategories.filter((x) => x !== c) : ([...brief.focusCategories, c].slice(-4) as Category[]),
                           )
                         }
-                        className={`rounded-full border px-2.5 py-1 text-[11px] transition ${on ? "border-ink bg-ink text-white" : "border-line text-ink-soft hover:border-ink"}`}
+                        className={`pill pill-sm ${on ? "pill-active" : ""}`}
                       >
                         {c}
                       </button>
@@ -307,10 +307,10 @@ export default function PagesStudio() {
               </button>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <button className="btn-outline py-2 text-xs" disabled={loading !== null || !draftA} onClick={() => generate("localize")}>
+              <button className="btn-outline btn-sm" disabled={loading !== null || !draftA} onClick={() => generate("localize")}>
                 {loading === "localize" ? "Localizing…" : "Localize to all markets"}
               </button>
-              <button className="btn-outline py-2 text-xs" disabled={!draftA || !draftB} onClick={startTest} title="Needs variants A and B">
+              <button className="btn-outline btn-sm" disabled={!draftA || !draftB} onClick={startTest} title="Needs variants A and B">
                 Start A/B test →
               </button>
             </div>
@@ -356,7 +356,7 @@ export default function PagesStudio() {
             <div className="card overflow-hidden">
               <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
                 {drafts.length > 1 && (
-                  <div className="flex flex-wrap rounded-[4px] border border-line p-0.5 text-xs">
+                  <div className="flex flex-wrap gap-2">
                     {drafts.map((d) => (
                       <button
                         key={d.key}
@@ -364,7 +364,7 @@ export default function PagesStudio() {
                           setActiveKey(d.key);
                           setEdited(null);
                         }}
-                        className={`rounded-[3px] px-2.5 py-1 ${currentDraft?.key === d.key ? "bg-ink text-white" : "text-ink-soft"}`}
+                        className={`pill pill-sm ${currentDraft?.key === d.key ? "pill-active" : ""}`}
                       >
                         {d.label}
                       </button>
@@ -380,7 +380,7 @@ export default function PagesStudio() {
                 </div>
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                   <EvalSummary evals={evals} />
-                  <button className="btn py-2" disabled={blocked} onClick={publish} title={blocked ? "Fix blocking evals to publish" : "Publish page"}>
+                  <button className="btn btn-sm" disabled={blocked} onClick={publish} title={blocked ? "Fix blocking evals to publish" : "Publish page"}>
                     Publish
                   </button>
                 </div>

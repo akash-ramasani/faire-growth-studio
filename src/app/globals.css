@@ -1,22 +1,29 @@
 @import "tailwindcss";
 
+/* Design tokens measured from faire.com (computed styles, Oct 2026).
+   Faire's typefaces (Graphik, Nantes) are licensed, so open equivalents stand in. */
 :root {
-  --ink: #1a1a1a;
-  --ink-soft: #4a4a4a;
+  --ink: #333333;
+  --ink-soft: #6c6a6a;
   --muted: #757575;
-  --line: #e6e2dc;
+  --line: #dadada;
   --paper: #ffffff;
-  --cream: #f7f4ef;
-  --sand: #efe7da;
-  --sage: #dfe5d8;
-  --clay: #ecd9cc;
-  --sky: #dbe4ea;
+  --cream: #fbf8f6;
+  --grey: #f7f7f7;
+  --burgundy: #41252a;
+  --olive: #595604;
+  --butter: #f1f29f;
+  --peach: #ffd0b6;
+  --sand: #f3ece3;
+  --sage: #e7e8d2;
+  --clay: #ffe1d1;
+  --sky: #f7f7c9;
   --pass: #2f6b4f;
-  --pass-bg: #e6f0ea;
+  --pass-bg: #e8f1eb;
   --warn: #8a5a12;
-  --warn-bg: #fbf0dc;
+  --warn-bg: #fbf1de;
   --fail: #a33a2b;
-  --fail-bg: #f8e4e0;
+  --fail-bg: #f9e6e2;
 }
 
 @theme inline {
@@ -26,6 +33,11 @@
   --color-line: var(--line);
   --color-paper: var(--paper);
   --color-cream: var(--cream);
+  --color-grey: var(--grey);
+  --color-burgundy: var(--burgundy);
+  --color-olive: var(--olive);
+  --color-butter: var(--butter);
+  --color-peach: var(--peach);
   --color-sand: var(--sand);
   --color-sage: var(--sage);
   --color-clay: var(--clay);
@@ -44,20 +56,51 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-inter), system-ui, sans-serif;
+  letter-spacing: 0.15px;
 }
 
-.field {
-  @apply w-full rounded-[4px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-ink;
-}
-.label {
-  @apply mb-1.5 block text-xs font-medium tracking-wide text-ink-soft uppercase;
-}
-.btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-[4px] bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-40;
-}
-.btn-outline {
-  @apply inline-flex items-center justify-center gap-2 rounded-[4px] border border-ink bg-white px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-40;
-}
-.card {
-  @apply rounded-[6px] border border-line bg-white;
+/* In the components layer so utilities (e.g. tracking-*, h-*) can still override them. */
+@layer components {
+  /* Faire: headlines are a regular-weight serif with no tracking. */
+  .font-serif {
+    letter-spacing: 0;
+    font-weight: 400;
+  }
+
+  .field {
+    @apply h-10 w-full rounded-[4px] border border-line bg-white px-3 text-sm text-ink outline-none transition focus:border-ink;
+  }
+  textarea.field {
+    @apply h-auto py-2.5;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  /* Primary: Faire's dark #333 button, 4px radius, 48px tall. */
+  .btn {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-[4px] border border-ink bg-ink px-5 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  /* Secondary: white with the #DADADA hairline. */
+  .btn-outline {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-[4px] border border-line bg-white px-5 text-sm text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-sm {
+    @apply h-9 px-4;
+  }
+  /* Faire's filter pills: 40px, fully rounded, dark when active. */
+  .pill {
+    @apply inline-flex h-10 items-center rounded-[100px] border border-line bg-white px-4 text-sm text-ink transition hover:border-ink;
+  }
+  .pill-active {
+    @apply border-ink bg-ink text-white hover:border-ink;
+  }
+  .pill-sm {
+    @apply h-8 px-3 text-xs;
+  }
+  .card {
+    @apply border border-line bg-white;
+  }
+  .eyebrow {
+    @apply text-sm text-ink-soft;
+  }
 }

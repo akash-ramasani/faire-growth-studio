@@ -69,7 +69,7 @@ function ValueInput({ attribute, operator, value, onChange }: { attribute: Attri
                 key={v}
                 type="button"
                 onClick={() => onChange((on ? selected.filter((s) => s !== v) : [...selected, v]).join(","))}
-                className={`rounded-full border px-2 py-0.5 text-[11px] ${on ? "border-ink bg-ink text-white" : "border-line text-ink-soft"}`}
+                className={`pill pill-sm ${on ? "pill-active" : ""}`}
               >
                 {v}
               </button>
@@ -154,9 +154,9 @@ export default function Audiences() {
   const summary = preview?.ok ? preview.summary : null;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">Self-serve audiences</p>
-      <h1 className="mt-1 font-serif text-3xl md:text-4xl">Describe who you want to reach</h1>
+    <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-8">
+      <p className="text-sm text-ink-soft">Self-serve audiences</p>
+      <h1 className="mt-1 font-serif text-[30px] leading-[38px] md:text-[38px] md:leading-[50px]">Describe who you want to reach</h1>
       <p className="mt-2 max-w-2xl text-sm text-ink-soft">
         Claude turns plain English into a rule, but the data contract decides if it is valid. Consent is applied in code at sync time, for every destination.
       </p>
@@ -181,7 +181,7 @@ export default function Audiences() {
                     setName(p.name);
                     setTranslation(null);
                   }}
-                  className="rounded-full border border-line px-3 py-1 text-xs text-ink-soft hover:border-ink"
+                  className="pill pill-sm"
                 >
                   {p.name}
                 </button>
@@ -205,9 +205,9 @@ export default function Audiences() {
           <div className="card p-5">
             <div className="mb-4 flex items-center justify-between">
               <p className="label mb-0">Rule</p>
-              <div className="flex rounded-[4px] border border-line p-0.5 text-xs">
+              <div className="flex gap-2">
                 {(["and", "or"] as const).map((c) => (
-                  <button key={c} onClick={() => setDraft((d) => ({ ...d, combinator: c }))} className={`rounded-[3px] px-2.5 py-1 ${draft.combinator === c ? "bg-ink text-white" : "text-ink-soft"}`}>
+                  <button key={c} onClick={() => setDraft((d) => ({ ...d, combinator: c }))} className={`pill pill-sm ${draft.combinator === c ? "pill-active" : ""}`}>
                     Match {c === "and" ? "all" : "any"}
                   </button>
                 ))}
@@ -250,7 +250,7 @@ export default function Audiences() {
               ))}
             </div>
             <button
-              className="btn-outline mt-3 py-2 text-xs"
+              className="btn-outline btn-sm mt-3"
               onClick={() => setDraft((d) => ({ ...d, conditions: [...d.conditions, { attribute: "orders_last_90d", operator: "gte", value: "1" }] }))}
             >
               + Add condition
@@ -353,10 +353,10 @@ export default function Audiences() {
                     setDest(d.id);
                     setPlan(null);
                   }}
-                  className={`rounded-[4px] border px-2 py-2 text-xs ${dest === d.id ? "border-ink bg-cream font-medium" : "border-line text-ink-soft"}`}
+                  className={`rounded-[4px] border px-2 py-2 text-sm ${dest === d.id ? "border-ink bg-ink text-white" : "border-line text-ink hover:border-ink"}`}
                 >
                   {d.label}
-                  <span className="block text-[10px] font-normal text-muted">needs {d.consent}</span>
+                  <span className="block text-[11px] opacity-70">needs {d.consent}</span>
                 </button>
               ))}
             </div>

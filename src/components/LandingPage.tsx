@@ -2,15 +2,16 @@ import { TESTIMONIALS, type Icon, type Palette } from "@/lib/landing/catalog";
 import { CATEGORY_LABELS, LOCALE_CONFIG, TESTIMONIAL_TRANSLATIONS } from "@/lib/landing/locale";
 import type { PageSpec } from "@/lib/landing/schema";
 
+// Hero palettes built from Faire's accent colours (burgundy, olive, butter, peach) on its warm neutrals.
 const PALETTE: Record<Palette, { bg: string; a: string; b: string; c: string }> = {
-  sand: { bg: "#efe7da", a: "#c9a77c", b: "#8c6b4a", c: "#f6efe4" },
-  sage: { bg: "#dfe5d8", a: "#93a487", b: "#55664c", c: "#f1f4ec" },
-  clay: { bg: "#ecd9cc", a: "#c98a6a", b: "#8e4f36", c: "#f7ece5" },
-  sky: { bg: "#dbe4ea", a: "#8aa6b8", b: "#4c6676", c: "#eef3f6" },
-  ink: { bg: "#2b2b2b", a: "#6f6a62", b: "#cbbfae", c: "#3a3a3a" },
+  sand: { bg: "#f3ece3", a: "#ffd0b6", b: "#41252a", c: "#fbf8f6" },
+  sage: { bg: "#e7e8d2", a: "#595604", b: "#41252a", c: "#f1f29f" },
+  clay: { bg: "#ffd0b6", a: "#41252a", b: "#595604", c: "#fbf8f6" },
+  sky: { bg: "#f1f29f", a: "#595604", b: "#41252a", c: "#ffffff" },
+  ink: { bg: "#41252a", a: "#ffd0b6", b: "#f1f29f", c: "#5a3a40" },
 };
 
-const TILE = ["#efe7da", "#dfe5d8", "#ecd9cc", "#dbe4ea"];
+const TILE = ["#f1f29f", "#ffd0b6", "#e7e8d2", "#f3ece3"];
 
 function IconGlyph({ icon }: { icon: Icon }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -76,8 +77,8 @@ function Cta({ label, dark, href }: { label: string; dark?: boolean; href?: stri
       href={href}
       target={href ? "_blank" : undefined}
       rel="noreferrer"
-      className={`inline-flex items-center rounded-[4px] px-6 py-3 text-sm font-medium transition ${
-        dark ? "bg-white text-ink hover:bg-cream" : "bg-ink text-white hover:bg-black"
+      className={`inline-flex h-12 items-center rounded-[4px] border px-5 text-sm transition ${
+        dark ? "border-line bg-white text-ink hover:bg-cream" : "border-ink bg-ink text-white hover:bg-black"
       }`}
     >
       {label}
@@ -93,16 +94,16 @@ export function LandingPage({ spec, interactive = false }: { spec: PageSpec; int
   const href = interactive ? spec.ctaUrl : undefined;
   return (
     <div lang={locale} className="@container bg-white text-ink">
-      <section className="grid items-center gap-8 px-6 py-12 @3xl:grid-cols-2 @3xl:px-12 @3xl:py-16">
+      <section className="grid items-center gap-8 bg-cream px-6 py-12 @3xl:grid-cols-2 @3xl:px-12 @3xl:py-16">
         <div>
-          <p className="mb-4 text-xs font-medium tracking-[0.14em] text-ink-soft uppercase">{spec.hero.eyebrow}</p>
-          <h1 className="font-serif text-4xl leading-[1.08] font-normal tracking-tight @3xl:text-5xl">{spec.hero.headline}</h1>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-ink-soft">{spec.hero.subhead}</p>
+          <p className="mb-4 text-sm text-ink-soft">{spec.hero.eyebrow}</p>
+          <h1 className="font-serif text-[38px] leading-[46px] @3xl:text-[52px] @3xl:leading-[64px]">{spec.hero.headline}</h1>
+          <p className="mt-4 max-w-md text-base leading-6">{spec.hero.subhead}</p>
           <div className="mt-8">
             <Cta label={spec.hero.ctaLabel} href={href} />
           </div>
         </div>
-        <div className="aspect-[6/5] overflow-hidden rounded-[6px]">
+        <div className="aspect-[6/5] overflow-hidden">
           <HeroVisual palette={spec.hero.palette} alt={spec.hero.imageAlt} />
         </div>
       </section>
@@ -114,36 +115,38 @@ export function LandingPage({ spec, interactive = false }: { spec: PageSpec; int
               <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-cream">
                 <IconGlyph icon={v.icon} />
               </div>
-              <h3 className="font-serif text-xl">{v.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{v.body}</p>
+              <h3 className="text-lg leading-[26px] font-medium">{v.title}</h3>
+              <p className="mt-2 text-sm leading-5 text-ink-soft">{v.body}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="bg-cream px-6 py-12 @3xl:px-12">
-        <h2 className="mb-6 font-serif text-2xl @3xl:text-3xl">{ui.categories}</h2>
+      <section className="border-t border-line px-6 py-12 @3xl:px-12">
+        <h2 className="mb-6 font-serif text-[30px] leading-[38px]">{ui.categories}</h2>
         <div className={`grid grid-cols-2 gap-4 ${spec.categories.length === 3 ? "@3xl:grid-cols-3" : "@3xl:grid-cols-4"}`}>
           {spec.categories.map((c, i) => (
-            <div key={c.name} className="overflow-hidden rounded-[6px] bg-white">
-              <div className="flex aspect-[4/3] items-end p-4" style={{ background: TILE[i % TILE.length] }}>
-                <span className="font-serif text-lg leading-tight">{CATEGORY_LABELS[locale][c.name]}</span>
+            // Faire's product-card pattern: square image, medium-weight name, muted secondary line.
+            <div key={c.name}>
+              <div className="flex aspect-square items-center justify-center" style={{ background: TILE[i % TILE.length] }}>
+                <span className="px-4 text-center font-serif text-[30px] leading-[38px]">{CATEGORY_LABELS[locale][c.name]}</span>
               </div>
-              <p className="p-4 text-sm leading-snug text-ink-soft">{c.blurb}</p>
+              <p className="mt-3 text-sm leading-5 font-medium">{CATEGORY_LABELS[locale][c.name]}</p>
+              <p className="text-sm leading-5 text-ink-soft">{c.blurb}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="px-6 py-14 text-center @3xl:px-12">
-        <blockquote className="mx-auto max-w-2xl font-serif text-2xl leading-snug @3xl:text-[28px]">“{quote}”</blockquote>
+      <section className="bg-cream px-6 py-16 text-center @3xl:px-12">
+        <blockquote className="mx-auto max-w-3xl font-serif text-[30px] leading-[38px] @3xl:text-[38px] @3xl:leading-[50px]">“{quote}”</blockquote>
         <p className="mt-5 text-sm text-ink-soft">
           {t.name}, {t.store} · {t.city}
         </p>
       </section>
 
       <section className="border-t border-line px-6 py-12 @3xl:px-12">
-        <h2 className="mb-6 font-serif text-2xl @3xl:text-3xl">{ui.faq}</h2>
+        <h2 className="mb-6 font-serif text-[30px] leading-[38px]">{ui.faq}</h2>
         <div className="divide-y divide-line border-y border-line">
           {spec.faq.map((f, i) => (
             <details key={i} className="group py-4" open={i === 0}>
@@ -157,8 +160,8 @@ export function LandingPage({ spec, interactive = false }: { spec: PageSpec; int
         </div>
       </section>
 
-      <section className="bg-ink px-6 py-14 text-center text-white @3xl:px-12">
-        <h2 className="mx-auto max-w-xl font-serif text-3xl @3xl:text-4xl">{spec.closing.headline}</h2>
+      <section className="bg-burgundy px-6 py-16 text-center text-white @3xl:px-12">
+        <h2 className="mx-auto max-w-xl font-serif text-[38px] leading-[50px]">{spec.closing.headline}</h2>
         <div className="mt-7">
           <Cta label={spec.closing.ctaLabel} href={href} dark />
         </div>

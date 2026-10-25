@@ -69,13 +69,13 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
             <h2 className="mt-1 font-serif text-2xl">{exp.name}</h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="btn-outline py-2 text-xs" disabled={!running} onClick={() => run(1)}>
+            <button className="btn-outline btn-sm" disabled={!running} onClick={() => run(1)}>
               Simulate 1 day
             </button>
-            <button className="btn-outline py-2 text-xs" disabled={!running} onClick={() => run(7)}>
+            <button className="btn-outline btn-sm" disabled={!running} onClick={() => run(7)}>
               Simulate 7 days
             </button>
-            <button className="btn py-2 text-xs" disabled={!running || d.status === "collecting"} onClick={finish} title={d.status === "collecting" ? d.reason : "Close the test and save learnings"}>
+            <button className="btn btn-sm" disabled={!running || d.status === "collecting"} onClick={finish} title={d.status === "collecting" ? d.reason : "Close the test and save learnings"}>
               Conclude
             </button>
           </div>
@@ -88,7 +88,7 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
             const f = extractFeatures(exp.arms[k].spec);
             const won = exp.outcome?.winner === k;
             return (
-              <div key={k} className={`rounded-[6px] border p-4 ${won ? "border-pass bg-pass-bg/40" : "border-line"}`}>
+              <div key={k} className={`border p-4 ${won ? "border-pass bg-pass-bg/40" : "border-line"}`}>
                 <div className="flex items-center justify-between text-xs text-muted">
                   <span className="font-medium tracking-wide text-ink uppercase">
                     {k === "A" ? "A · control" : "B · challenger"} {won && "· winner"}
@@ -146,7 +146,7 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
         </div>
 
         {exp.outcome && exp.outcome.learnings.length > 0 && (
-          <div className="mt-5 rounded-[6px] bg-sage/60 p-4 text-sm">
+          <div className="mt-5 bg-sage/60 p-4 text-sm">
             <p className="font-medium">Learned from this test</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-soft">
               {exp.outcome.learnings.map((l) => (
@@ -198,9 +198,9 @@ function ExperimentsInner() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">Experiments</p>
-      <h1 className="mt-1 font-serif text-3xl md:text-4xl">A learning loop for generated pages</h1>
+    <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-8">
+      <p className="text-sm text-ink-soft">Experiments</p>
+      <h1 className="mt-1 font-serif text-[30px] leading-[38px] md:text-[38px] md:leading-[50px]">A learning loop for generated pages</h1>
       <p className="mt-2 max-w-2xl text-sm text-ink-soft">
         Run A and B, call a winner only with enough evidence, then turn the difference into a learning. Claude gets those learnings the next time it writes for
         the same audience, so each test makes the next page better.
@@ -226,7 +226,7 @@ function ExperimentsInner() {
                 </li>
               ))}
             </ul>
-            <button className="btn-outline mt-3 w-full py-2 text-xs" onClick={demo} disabled={creating}>
+            <button className="btn-outline btn-sm mt-3 w-full" onClick={demo} disabled={creating}>
               {creating ? "Creating…" : "+ Quick demo test"}
             </button>
           </div>

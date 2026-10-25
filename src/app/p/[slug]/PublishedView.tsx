@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { LandingPage } from "@/components/LandingPage";
+import { Wordmark } from "@/components/Wordmark";
 import { useHydrated, usePages } from "@/lib/store";
 
 export function PublishedView({ slug }: { slug: string }) {
@@ -36,8 +37,8 @@ export function PublishedView({ slug }: { slug: string }) {
           Back to studio
         </Link>
       </div>
-      <header className="border-b border-line px-6 py-4 md:px-12">
-        <span className="font-serif text-[22px] font-medium tracking-[0.18em]">FAIRE</span>
+      <header className="flex h-[60px] items-center border-b border-line bg-white px-6 md:px-12">
+        <Wordmark />
       </header>
       <LandingPage spec={page.spec} interactive />
     </div>

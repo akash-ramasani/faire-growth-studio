@@ -49,11 +49,11 @@ export default function Monitoring() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-8">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">Monitoring</p>
-          <h1 className="mt-1 font-serif text-3xl md:text-4xl">Is the agent trustworthy today?</h1>
+          <p className="text-sm text-ink-soft">Monitoring</p>
+          <h1 className="mt-1 font-serif text-[30px] leading-[38px] md:text-[38px] md:leading-[50px]">Is the agent trustworthy today?</h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-soft">
             Every generation is logged with its path, eval results and cost. A rising fallback or repair rate is the alert signal. In production these events
             go to the warehouse and page on-call.
@@ -61,7 +61,7 @@ export default function Monitoring() {
         </div>
         {runs.length > 0 && (
           <button
-            className="btn-outline py-2 text-xs"
+            className="btn-outline btn-sm"
             onClick={() => {
               clearRuns();
             }}
