@@ -1,5 +1,7 @@
 # Growth Studio
 
+**Live demo:** https://faire-growth-studio.vercel.app
+
 A working prototype of the two "what you'll build first" problems from Faire's **Growth Platform, Marketing Engineer** role:
 
 1. **Marketing-led landing pages:** a self-serve, agentic landing page service. A marketer writes a brief and gets an on-brand, eval-gated page with A/B variants, in US, UK, French and German markets.
