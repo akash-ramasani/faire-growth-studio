@@ -55,3 +55,7 @@ CLAUDE.md
 # local SQLite database
 local.db
 local.db-*
+
+# agent skill files installed by marketplace integrations
+.agents
+skills-lock.json
