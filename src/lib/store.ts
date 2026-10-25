@@ -1,96 +1,57 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import type { Experiment, Learning } from "./experiments/model";
 import type { GenerationResult, PageSpec } from "./landing/schema";
+import type { PublishedPage, RunRecord } from "./db/repo";
 
-// Per-browser persistence for the demo. In production, runs would land in the warehouse
-// and published pages in the CMS.
+export type { PublishedPage, RunRecord };
 
-export type RunRecord = {
-  at: number;
-  kind: "page" | "audience";
-  campaign: string;
-  source: GenerationResult["source"] | "audience_ok" | "audience_failed";
-  latencyMs: number;
-  attempts: number;
-  evals: { id: string; name: string; passed: boolean; severity: string }[];
-  fallbackReason?: string;
-  inputTokens?: number;
-  outputTokens?: number;
-};
+// Client access to the SQLite-backed API. Data is shared by everyone using the demo.
+// After a write, `invalidate()` tells every mounted hook to refetch.
 
-const RUNS = "fgs.runs.v1";
-const PAGES = "fgs.pages.v1";
+const EVENT = "gs:invalidate";
+const invalidate = () => window.dispatchEvent(new Event(EVENT));
 
-const listeners = new Set<() => void>();
-const subscribe = (fn: () => void) => {
-  listeners.add(fn);
-  window.addEventListener("storage", fn);
-  return () => {
-    listeners.delete(fn);
-    window.removeEventListener("storage", fn);
-  };
-};
-
-function readRaw(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
+function useApi<T>(url: string, fallback: T): { data: T; loaded: boolean } {
+  const [state, setState] = useState<{ data: T; loaded: boolean }>({ data: fallback, loaded: false });
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      fetch(url, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((data: T) => alive && setState({ data, loaded: true }))
+        .catch(() => alive && setState((s) => ({ ...s, loaded: true })));
+    load();
+    window.addEventListener(EVENT, load);
+    return () => {
+      alive = false;
+      window.removeEventListener(EVENT, load);
+    };
+  }, [url]);
+  return state;
 }
 
-function parse<T>(raw: string | null, fallback: T): T {
-  try {
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+async function send<T = { ok: boolean; error?: string }>(url: string, method: string, body?: unknown): Promise<T> {
+  const res = await fetch(url, { method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const data = (await res.json().catch(() => ({ ok: false, error: `Request failed (${res.status})` }))) as T;
+  invalidate();
+  return data;
 }
 
-const read = <T,>(key: string, fallback: T): T => parse(readRaw(key), fallback);
+export const useRuns = () => useApi<RunRecord[]>("/api/runs", []);
+export const clearRuns = () => send("/api/runs", "DELETE");
 
-function write(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {}
-  listeners.forEach((fn) => fn());
-}
+export const usePages = () => useApi<PublishedPage[]>("/api/published", []);
+export const publishPage = (spec: PageSpec, source: GenerationResult["source"]) =>
+  send<{ ok: boolean; slug?: string; error?: string }>("/api/published", "POST", { spec, source });
 
-// Subscribes on the raw string so the snapshot is stable between writes.
-function useStored<T>(key: string, fallback: T): T {
-  const raw = useSyncExternalStore(subscribe, () => readRaw(key), () => null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => parse(raw, fallback), [raw]);
-}
+export const useExperiments = () => useApi<Experiment[]>("/api/experiments", []);
+export const createExperiment = (a: { spec: PageSpec; source: GenerationResult["source"] }, b: { spec: PageSpec; source: GenerationResult["source"] }) =>
+  send<{ ok: boolean; id?: string; error?: string }>("/api/experiments", "POST", { a, b });
+export const simulateExperiment = (id: string, days: number) => send(`/api/experiments/${id}`, "POST", { action: "simulate", days });
+export const concludeExperiment = (id: string) => send(`/api/experiments/${id}`, "POST", { action: "conclude" });
 
-export const useHydrated = () =>
-  useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-
-export const getRuns = () => read<RunRecord[]>(RUNS, []);
-export const addRun = (r: RunRecord) => write(RUNS, [r, ...getRuns()].slice(0, 200));
-export const clearRuns = () => write(RUNS, []);
-export const useRuns = () => useStored<RunRecord[]>(RUNS, []);
-
-export type PublishedPage = { spec: PageSpec; publishedAt: number; source: GenerationResult["source"] };
-export const getPages = () => read<PublishedPage[]>(PAGES, []);
-export const publishPage = (p: PublishedPage) => write(PAGES, [p, ...getPages().filter((x) => x.spec.slug !== p.spec.slug)].slice(0, 50));
-export const usePages = () => useStored<PublishedPage[]>(PAGES, []);
-
-const EXPERIMENTS = "fgs.experiments.v1";
-const LEARNINGS = "fgs.learnings.v1";
-
-export const getExperiments = () => read<Experiment[]>(EXPERIMENTS, []);
-export const useExperiments = () => useStored<Experiment[]>(EXPERIMENTS, []);
-export const saveExperiment = (e: Experiment) => write(EXPERIMENTS, [e, ...getExperiments().filter((x) => x.id !== e.id)].slice(0, 30));
-
-export const getLearnings = () => read<Learning[]>(LEARNINGS, []);
-export const useLearnings = () => useStored<Learning[]>(LEARNINGS, []);
-export const addLearnings = (ls: Learning[]) => write(LEARNINGS, [...ls, ...getLearnings()].slice(0, 100));
-export const setLearningActive = (id: string, active: boolean) => write(LEARNINGS, getLearnings().map((l) => (l.id === id ? { ...l, active } : l)));
-export const clearLearnings = () => write(LEARNINGS, []);
+export const useLearnings = () => useApi<Learning[]>("/api/learnings", []);
+export const setLearningActive = (id: string, active: boolean) => send("/api/learnings", "PATCH", { id, active });
+export const clearLearnings = () => send("/api/learnings", "DELETE");

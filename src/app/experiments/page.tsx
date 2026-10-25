@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { extractFeatures } from "@/lib/experiments/features";
-import { advance, conclude, confidenceSeries, createExperiment, decision, totals, type Experiment } from "@/lib/experiments/model";
+import { confidenceSeries, decision, totals, type Experiment } from "@/lib/experiments/model";
 import { DECISION, posterior, probBeatsControl, relativeLift } from "@/lib/experiments/stats";
 import { LOCALE_CONFIG } from "@/lib/landing/locale";
 import type { Brief, GenerationResult } from "@/lib/landing/schema";
-import { addLearnings, clearLearnings, saveExperiment, setLearningActive, useExperiments, useLearnings } from "@/lib/store";
+import { clearLearnings, concludeExperiment, createExperiment, setLearningActive, simulateExperiment, useExperiments, useLearnings } from "@/lib/store";
 
 const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 
@@ -47,16 +47,20 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
   const p = probBeatsControl(t.a, t.b);
   const lift = relativeLift(t.a, t.b);
   const brief = exp.arms.A.spec.brief;
-  const running = exp.status === "running";
+  const [busy, setBusy] = useState(false);
+  const running = exp.status === "running" && !busy;
 
-  function run(days: number) {
-    saveExperiment(advance(exp, days));
+  // Simulation and conclusion run on the server so every viewer sees the same experiment state.
+  async function act(fn: () => Promise<unknown>) {
+    setBusy(true);
+    try {
+      await fn();
+    } finally {
+      setBusy(false);
+    }
   }
-  function finish() {
-    const { experiment, learnings } = conclude(exp);
-    saveExperiment(experiment);
-    if (learnings.length) addLearnings(learnings);
-  }
+  const run = (days: number) => act(() => simulateExperiment(exp.id, days));
+  const finish = () => act(() => concludeExperiment(exp.id));
 
   return (
     <div className="space-y-6">
@@ -175,13 +179,15 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
 function ExperimentsInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const experiments = useExperiments();
-  const learnings = useLearnings();
+  const { data: experiments, loaded } = useExperiments();
+  const { data: learnings } = useLearnings();
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const selected = experiments.find((e) => e.id === params.get("id")) ?? experiments[0];
 
   async function demo() {
     setCreating(true);
+    setError(null);
     try {
       const call = async (variantHint?: string) =>
         (await (
@@ -189,9 +195,11 @@ function ExperimentsInner() {
         ).json()) as GenerationResult;
       const a = await call();
       const b = await call("Lead with a different benefit than variant A.");
-      const exp = createExperiment(a, b);
-      saveExperiment(exp);
-      router.push(`/experiments?id=${exp.id}`);
+      const created = await createExperiment({ spec: a.spec, source: a.source }, { spec: b.spec, source: b.source });
+      if (!created.ok || !created.id) throw new Error(created.error ?? "Could not create the test");
+      router.push(`/experiments?id=${created.id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setCreating(false);
     }
@@ -210,7 +218,8 @@ function ExperimentsInner() {
         <aside className="min-w-0 space-y-6">
           <div className="card p-4">
             <p className="section-title">Tests</p>
-            {experiments.length === 0 && <p className="text-sm text-muted">No tests yet.</p>}
+            {experiments.length === 0 && <p className="text-sm text-ink-soft">{loaded ? "No tests yet." : "Loading…"}</p>}
+            {error && <p className="error-text">{error}</p>}
             <ul className="space-y-1">
               {experiments.map((e) => (
                 <li key={e.id}>

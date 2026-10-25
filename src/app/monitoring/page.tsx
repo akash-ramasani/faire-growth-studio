@@ -19,7 +19,7 @@ const SOURCE_LABEL: Record<RunRecord["source"], string> = {
 };
 
 export default function Monitoring() {
-  const runs = useRuns();
+  const { data: runs, loaded } = useRuns();
 
   const pages = runs.filter((r) => r.kind === "page");
   const audiences = runs.filter((r) => r.kind === "audience");
@@ -55,8 +55,8 @@ export default function Monitoring() {
           <p className="text-sm text-ink-soft">Monitoring</p>
           <h1 className="mt-1 font-serif text-[30px] leading-[38px] md:text-[38px] md:leading-[50px]">Is the agent trustworthy today?</h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-soft">
-            Every generation is logged with its path, eval results and cost. A rising fallback or repair rate is the alert signal. In production these events
-            go to the warehouse and page on-call.
+            Every generation is logged server-side with its path, eval results and cost, in SQLite shared by everyone using the demo. A rising fallback
+            or repair rate is the alert signal; in production these events would go to the warehouse and page on-call.
           </p>
         </div>
         {runs.length > 0 && (
@@ -143,7 +143,7 @@ export default function Monitoring() {
                 })}
               </tbody>
             </table>
-            {runs.length === 0 && <p className="px-5 py-8 text-sm text-muted">No runs yet in this browser.</p>}
+            {runs.length === 0 && <p className="px-5 py-8 text-sm text-muted">{loaded ? "No runs yet." : "Loading…"}</p>}
           </div>
         </div>
       </div>

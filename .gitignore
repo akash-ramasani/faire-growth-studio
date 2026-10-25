@@ -51,3 +51,7 @@ CLAUDE.md
 
 # local tooling
 .claude
+
+# local SQLite database
+local.db
+local.db-*

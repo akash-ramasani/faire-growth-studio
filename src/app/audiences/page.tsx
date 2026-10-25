@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { ATTRIBUTES, ATTRIBUTE_KEYS, OPERATOR_LABELS, operatorsFor, type AttributeKey, type DraftRule } from "@/lib/audiences/contract";
 import type { AudienceSummary } from "@/lib/audiences/evaluate";
 import type { SyncDestination, SyncPlan } from "@/lib/audiences/sync";
-import { addRun } from "@/lib/store";
 
 type Preview = { ok: true; description: string; sql: string; summary: AudienceSummary } | { ok: false; errors: string[] };
 
@@ -120,16 +119,6 @@ export default function Audiences() {
     try {
       const res = await fetch("/api/audiences/translate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ prompt }) });
       const data = await res.json();
-      addRun({
-        at: Date.now(),
-        kind: "audience",
-        campaign: prompt.slice(0, 60),
-        source: data.ok ? "audience_ok" : "audience_failed",
-        latencyMs: data.latencyMs ?? 0,
-        attempts: 1,
-        evals: [],
-        fallbackReason: data.ok ? undefined : data.error,
-      });
       if (data.ok) {
         setDraft(data.draft);
         setTranslation({ ok: true, text: data.explanation, unsupported: data.unsupported });

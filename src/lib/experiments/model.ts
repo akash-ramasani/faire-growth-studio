@@ -27,8 +27,11 @@ export type Learning = {
   active: boolean;
 };
 
-export function createExperiment(a: GenerationResult, b: GenerationResult): Experiment {
-  const id = `exp_${Date.now().toString(36)}`;
+type ArmInput = Pick<GenerationResult, "spec" | "source">;
+
+export function createExperiment(a: ArmInput, b: ArmInput): Experiment {
+  // Random suffix: experiments are shared in one database, so ids must not collide across visitors.
+  const id = `exp_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   return {
     id,
     name: a.spec.brief.campaignName,

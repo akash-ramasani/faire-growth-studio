@@ -154,3 +154,30 @@ export function toSql(rule: AudienceRule, table = "analytics.retailer_marketing_
   };
   return `SELECT retailer_id\nFROM ${table}\nWHERE ${rule.conditions.map(clause).join(`\n  ${rule.combinator.toUpperCase()} `)}`;
 }
+
+// Parameterized WHERE clause for executing a validated rule. Column names come from the
+// attribute allowlist (never user text); every value is bound, never interpolated.
+export function toWhere(rule: AudienceRule): { where: string; args: Array<string | number> } {
+  const args: Array<string | number> = [];
+  const bind = (v: string | number) => (args.push(v), "?");
+  const clause = (c: Condition) => {
+    const col = c.attribute;
+    switch (c.operator) {
+      case "is_true":
+        return `${col} = 1`;
+      case "is_false":
+        return `${col} = 0`;
+      case "is_empty":
+        return `${col} IS NULL`;
+      case "in":
+        return `${col} IN (${(c.value as string[]).map(bind).join(", ")})`;
+      case "not_in":
+        return `${col} NOT IN (${(c.value as string[]).map(bind).join(", ")})`;
+      default: {
+        const op = { eq: "=", neq: "<>", gt: ">", gte: ">=", lt: "<", lte: "<=" }[c.operator];
+        return `${col} ${op} ${bind(c.value as string | number)}`;
+      }
+    }
+  };
+  return { where: rule.conditions.map(clause).join(rule.combinator === "and" ? " AND " : " OR "), args };
+}

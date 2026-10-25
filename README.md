@@ -26,7 +26,7 @@ npm run dev                  # http://localhost:3000
 The app works without a key. Landing pages then come from the approved template, which *is* the defined failure path, so the full flow is still visible. With a key, Claude (`claude-opus-5-5` by default, override with `ANTHROPIC_MODEL`) writes the copy and translates audience descriptions.
 
 ```bash
-npm test          # 47 unit tests: evals, markets, data contract, consent, stats, fallback
+npm test          # 58 tests: evals, markets, data contract, SQL parity, consent, stats, fallback
 npm run eval      # offline regression suite over evals/briefs.json
 npm run lint && npm run typecheck && npm run build
 ```
@@ -105,11 +105,27 @@ Every generation logs its path (first-pass / repaired / fallback), per-check eva
 
 `npm run eval` runs a fixed brief set, including adversarial briefs that ask for guarantees or mismatch the audience, through the full pipeline. It fails if anything would ship with a blocking failure, or if the live first-pass rate drops below `EVAL_MIN_FIRST_PASS` (default 0.5). CI runs it on every push.
 
+## Data: SQLite
+
+Everything persists in SQLite through `@libsql/client` ([`src/lib/db`](src/lib/db)): a local `local.db` file in development, and [Turso](https://turso.tech) (hosted SQLite, via the Vercel Marketplace) in production. Set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`; without them the app falls back to a local file.
+
+| Table | Holds |
+| --- | --- |
+| `runs` | Every generation and audience translation, logged server-side (path, evals, latency, tokens) |
+| `published_pages` | Pages published from the studio, served to anyone at `/p/<slug>` |
+| `experiments`, `learnings` | A/B tests (simulated and concluded on the server) and the learning memory |
+| `retailers` | The synthetic retailer table that audiences query |
+| `audience_syncs` | Every dry-run sync, with the rule and consent exclusions |
+
+- **Audiences run as real SQL.** A validated rule compiles to a parameterized `WHERE` clause (`toWhere`). Column names come from the attribute allowlist and every value is bound. A test checks that SQL results match the in-memory reference for every operator type.
+- **The publish gate lives on the server.** `POST /api/published` re-validates the schema, rebuilds the URL and slug from the brief, and re-runs blocking evals, so a tampered request can't publish a non-compliant page or a hostile link.
+- **Learnings are read server-side** when generating, never accepted as free text from the browser.
+
 ## Stack and production notes
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Zod · `@anthropic-ai/sdk` · Vitest.
 
 Production would differ in these ways:
-- Published pages and run logs live in `localStorage` for the demo. In production they go to the CMS and the warehouse, with alerting on the fallback-rate metric.
+- SQLite is shared by every visitor of the demo. In production, runs would go to the warehouse (with alerting on the fallback-rate metric), pages to the CMS, and audiences would query the warehouse model directly.
 - The retailer table is synthetic and seeded. In production, the contract would be generated from the warehouse model (dbt / protobuf), so the schema and the UI can't drift.
 - Next steps: an LLM-as-judge eval for brief adherence (scored offline against the regression set, not used as a gate), a feedback loop from page conversion back into the prompt, and vendor-vs-build cost tracking per page.

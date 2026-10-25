@@ -6,11 +6,11 @@ import { useMemo, useState } from "react";
 import { EvalList, EvalSummary } from "@/components/EvalList";
 import { LandingPage } from "@/components/LandingPage";
 import { CATEGORIES, CHANNELS, TONES, type Category } from "@/lib/landing/catalog";
-import { createExperiment, learningPrompt, relevantLearnings } from "@/lib/experiments/model";
+import { relevantLearnings } from "@/lib/experiments/model";
 import { blockingFailures, runEvals } from "@/lib/landing/evals";
 import { LOCALE_CONFIG, LOCALES, type Locale } from "@/lib/landing/locale";
 import type { Brief, GenerationResult, PageSpec } from "@/lib/landing/schema";
-import { addRun, publishPage, saveExperiment, useLearnings, usePages } from "@/lib/store";
+import { createExperiment, publishPage, useLearnings, usePages } from "@/lib/store";
 
 const PRESETS: Array<{ label: string; brief: Brief }> = [
   {
@@ -82,12 +82,12 @@ export default function PagesStudio() {
   const [tab, setTab] = useState<"preview" | "evals" | "json">("preview");
   const [loading, setLoading] = useState<null | "A" | "B" | "localize">(null);
   const [error, setError] = useState<string | null>(null);
-  const published = usePages();
-  const allLearnings = useLearnings();
+  const { data: published } = usePages();
+  const { data: allLearnings } = useLearnings();
+  const [publishing, setPublishing] = useState(false);
   const [useLearned, setUseLearned] = useState(true);
   const [justPublished, setJustPublished] = useState<string | null>(null);
 
-  const learnings = useLearned ? relevantLearnings(allLearnings, brief) : [];
   const currentDraft = drafts.find((d) => d.key === activeKey) ?? drafts[0];
   const current = currentDraft?.result;
   const spec = edited ?? current?.spec;
@@ -98,29 +98,18 @@ export default function PagesStudio() {
 
   const set = <K extends keyof Brief>(k: K, v: Brief[K]) => setBrief((b) => ({ ...b, [k]: v }));
 
-  async function requestPage(b: Brief, variantHint?: string): Promise<Draft["result"]> {
+  async function requestPage(b: Brief, variantHint?: string) {
     const res = await fetch("/api/pages/generate", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ brief: b, variantHint, learnings: learnings.map(learningPrompt) }),
+      // The server looks up matching learnings itself and logs the run to SQLite.
+      body: JSON.stringify({ brief: b, variantHint, applyLearnings: useLearned }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Generation failed");
-    const result = data as GenerationResult;
-    addRun({
-      at: Date.now(),
-      kind: "page",
-      campaign: `${b.campaignName}${b.locale === "en-US" ? "" : ` (${b.locale})`}`,
-      source: result.source,
-      latencyMs: result.latencyMs,
-      attempts: result.attempts,
-      evals: result.evals.map(({ id, name, passed, severity }) => ({ id, name, passed, severity })),
-      fallbackReason: result.fallbackReason,
-      inputTokens: result.usage?.inputTokens,
-      outputTokens: result.usage?.outputTokens,
-    });
-    return result;
+    return data as GenerationResult & { learningsApplied: number };
   }
+
 
   async function generate(mode: "A" | "B" | "localize") {
     setLoading(mode);
@@ -130,7 +119,7 @@ export default function PagesStudio() {
       if (mode === "localize") {
         const others = LOCALES.filter((l) => l !== brief.locale);
         const results = await Promise.all(others.map((locale) => requestPage({ ...brief, locale })));
-        const localized = others.map((locale, i) => ({ key: locale, label: LOCALE_CONFIG[locale].flag, result: results[i], learningsApplied: learnings.length }));
+        const localized = others.map((locale, i) => ({ key: locale, label: LOCALE_CONFIG[locale].flag, result: results[i], learningsApplied: results[i].learningsApplied }));
         setDrafts((d) => [...d.filter((x) => x.key === "A" || x.key === "B"), ...localized]);
         setActiveKey(others[0]);
       } else {
@@ -139,7 +128,7 @@ export default function PagesStudio() {
             ? `Write a clearly different B variant from this A headline: "${draftA?.result.spec.hero.headline}". Lead with a different benefit and use a different palette.`
             : undefined;
         const result = await requestPage(brief, hint);
-        const draft = { key: mode, label: `Variant ${mode}`, result, learningsApplied: learnings.length };
+        const draft = { key: mode, label: `Variant ${mode}`, result, learningsApplied: result.learningsApplied };
         setDrafts((d) => (mode === "A" ? [draft] : [...d.filter((x) => x.key !== "B"), draft]));
         setActiveKey(mode);
       }
@@ -152,11 +141,15 @@ export default function PagesStudio() {
     }
   }
 
-  function startTest() {
+  async function startTest() {
     if (!draftA || !draftB) return;
-    const exp = createExperiment(draftA.result, draftB.result);
-    saveExperiment(exp);
-    router.push(`/experiments?id=${exp.id}`);
+    setError(null);
+    const created = await createExperiment(
+      { spec: draftA.result.spec, source: draftA.result.source },
+      { spec: draftB.result.spec, source: draftB.result.source },
+    );
+    if (created.ok && created.id) router.push(`/experiments?id=${created.id}`);
+    else setError(created.error ?? "Could not start the test");
   }
 
   function editHero(field: "headline" | "subhead" | "ctaLabel", value: string) {
@@ -164,10 +157,15 @@ export default function PagesStudio() {
     setEdited({ ...spec, hero: { ...spec.hero, [field]: value } });
   }
 
-  function publish() {
+  async function publish() {
     if (!spec || blocked || !current) return;
-    publishPage({ spec, publishedAt: Date.now(), source: current.source });
-    setJustPublished(spec.slug);
+    setPublishing(true);
+    setError(null);
+    // The server re-runs the evals and rebuilds the URL before anything is stored.
+    const res = await publishPage(spec, current.source);
+    setPublishing(false);
+    if (res.ok && res.slug) setJustPublished(res.slug);
+    else setError(res.error ?? "Publishing failed");
   }
 
   return (
@@ -348,7 +346,7 @@ export default function PagesStudio() {
 
           {published.length > 0 && (
             <div className="card p-5">
-              <p className="section-title">Published in this browser</p>
+              <p className="section-title">Recently published</p>
               <ul className="mt-2 space-y-2 text-sm">
                 {published.slice(0, 6).map((p) => (
                   <li key={p.spec.slug} className="flex items-center justify-between gap-2">
@@ -399,8 +397,8 @@ export default function PagesStudio() {
                 </div>
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                   <EvalSummary evals={evals} />
-                  <button className="btn btn-sm" disabled={blocked} onClick={publish} title={blocked ? "Fix blocking evals to publish" : "Publish page"}>
-                    Publish
+                  <button className="btn btn-sm" disabled={blocked || publishing} onClick={publish} title={blocked ? "Fix blocking evals to publish" : "Publish page"}>
+                    {publishing ? "Publishing…" : "Publish"}
                   </button>
                 </div>
               </div>
@@ -420,9 +418,10 @@ export default function PagesStudio() {
                 {current.fallbackReason && <span className="text-ink">Why fallback: {current.fallbackReason}</span>}
               </div>
 
+              {error && <p className="border-b border-line bg-fail-bg px-4 py-2.5 text-sm text-fail">{error}</p>}
               {justPublished && (
                 <div className="flex items-center justify-between border-b border-line bg-pass-bg px-4 py-2.5 text-sm text-pass">
-                  <span>Published to /p/{justPublished}</span>
+                  <span>Published to /p/{justPublished}. Anyone with the link can open it.</span>
                   <Link href={`/p/${justPublished}`} className="font-medium underline">
                     Open page
                   </Link>
