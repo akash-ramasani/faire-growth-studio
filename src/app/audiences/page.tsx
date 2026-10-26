@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { Flag, isFlagCode } from "@/components/Flag";
 import { PlatformLogo } from "@/components/PlatformLogo";
+import { FieldLabel, GettingStarted, HelpTip, SectionTitle } from "@/components/Help";
 import { toast } from "@/components/Toast";
+import { HELP } from "@/lib/help";
+
+const H = HELP.audiences;
 import { useCountUp } from "@/lib/useCountUp";
 import { ATTRIBUTES, ATTRIBUTE_KEYS, OPERATOR_LABELS, operatorsFor, type AttributeKey, type DraftRule } from "@/lib/audiences/contract";
 import type { AudienceSummary } from "@/lib/audiences/evaluate";
@@ -184,10 +188,22 @@ export default function Audiences() {
         Claude turns plain English into a rule, but the data contract decides if it is valid. Consent is applied in code at sync time, for every destination.
       </p>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_400px]">
+      <div className="mt-6">
+        <GettingStarted
+          id="audiences"
+          title="How self-serve audiences work"
+          steps={[
+            { title: "Describe or pick", body: "Type who you want in plain English, or click an example. Claude turns it into a rule using only fields that exist." },
+            { title: "Adjust the rule", body: "Change any field, comparison or value. The audience size and sample update instantly from the database." },
+            { title: "Build the sync", body: "Name it, choose Braze, Meta or Google Ads, and build the payload. People without consent are removed automatically; nothing is actually sent." },
+          ]}
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
         <div className="min-w-0 space-y-6">
           <div className="card p-5">
-            <label className="label" htmlFor="nl">Ask in plain English</label>
+            <FieldLabel htmlFor="nl" help={H.plainEnglish}>Ask in plain English</FieldLabel>
             <div className="search-pill">
               <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-ink" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.3">
                 <circle cx="7" cy="7" r="5" />
@@ -205,8 +221,9 @@ export default function Audiences() {
                 {translating ? "Building…" : "Build rule"}
               </button>
             </div>
-            <p className="help-text mt-2">Claude proposes a rule; the data contract decides whether it is valid.</p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <p className="help-text mt-2">Press Enter or Build rule. Claude fills in the rule below, and the audience size updates on the right.</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-ink-soft">Or try an example:</span>
               {PRESETS.map((p) => (
                 <button
                   key={p.name}
@@ -239,7 +256,8 @@ export default function Audiences() {
 
           <div className="card p-5">
             <div className="mb-4 flex items-center justify-between">
-              <p className="section-title mb-0">Rule</p>
+              <SectionTitle help={H.rule} className="mb-0">Rule</SectionTitle>
+              <div className="flex items-center">
               <div className="segmented" role="radiogroup" aria-label="Combine conditions">
                 {(["and", "or"] as const).map((c) => (
                   <button
@@ -253,6 +271,23 @@ export default function Audiences() {
                   </button>
                 ))}
               </div>
+              <HelpTip text={H.match} align="end" />
+              </div>
+            </div>
+            <div className="mb-1.5 hidden gap-2 px-3 text-xs text-ink-soft md:grid md:grid-cols-[minmax(220px,1.1fr)_minmax(140px,0.7fr)_minmax(0,2fr)_auto]">
+              <span className="flex items-center">
+                Field
+                <HelpTip text={H.attribute} align="start" />
+              </span>
+              <span className="flex items-center">
+                Comparison
+                <HelpTip text={H.operator} align="start" />
+              </span>
+              <span className="flex items-center">
+                Value
+                <HelpTip text={H.value} align="start" />
+              </span>
+              <span className="w-10" />
             </div>
             <div className="stagger space-y-3">
               {draft.conditions.map((c, i) => (
@@ -298,6 +333,7 @@ export default function Audiences() {
             >
               + Add condition
             </button>
+            <HelpTip text={H.addCondition} align="start" />
             {preview && !preview.ok && (
               <div className="mt-4 rounded-[4px] bg-fail-bg p-3 text-sm text-fail">
                 <p className="font-medium">Blocked by the data contract</p>
@@ -311,6 +347,7 @@ export default function Audiences() {
             {preview?.ok && (
               <details className="mt-4 text-sm text-ink-soft">
                 <summary className="link cursor-pointer">{preview.description}</summary>
+                <p className="help-text mt-2">{H.sql}</p>
                 <pre className="mt-2 overflow-x-auto rounded-[4px] bg-cream p-3 text-[11px]">{preview.sql}</pre>
               </details>
             )}
@@ -356,12 +393,16 @@ export default function Audiences() {
 
         <aside className="min-w-0 space-y-6">
           <div className="card p-5">
-            <p className="section-title">Audience size</p>
+            <SectionTitle help={H.size} align="end">Audience size</SectionTitle>
             <p className="font-serif text-5xl tabular-nums" aria-live="polite">{summary ? fmtCount(animatedSize) : "–"}</p>
             <p className="mt-1 text-xs text-muted">{summary ? `${((summary.size / summary.total) * 100).toFixed(1)}% of ${fmt(summary.total)} retailers` : "Fix the rule to see a count"}</p>
             {summary && (
               <>
-                <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-line pt-4 text-sm">
+                <div className="mt-5 flex items-center border-t border-line pt-4 text-xs text-ink-soft">
+                  Who can be reached
+                  <HelpTip text={H.reach} align="start" />
+                </div>
+                <dl className="mt-2 grid grid-cols-3 gap-3 text-sm">
                   <div>
                     <dt className="text-xs text-muted">Email-reachable</dt>
                     <dd className="font-medium">{fmt(summary.reachableEmail)}</dd>
@@ -397,10 +438,12 @@ export default function Audiences() {
           </div>
 
           <div className="card p-5">
-            <p className="section-title">Sync (dry run)</p>
-            <label className="label" htmlFor="aud-name">Audience name</label>
+            <SectionTitle help={H.buildPayload} align="end">Sync (dry run)</SectionTitle>
+            <FieldLabel htmlFor="aud-name" help={H.syncName}>Audience name</FieldLabel>
             <input id="aud-name" className="field" value={name} onChange={(e) => setName(e.target.value)} />
-            <span className="label mt-4" id="dest-label">Destination</span>
+            <div className="mt-4">
+              <FieldLabel id="dest-label" help={H.destination}>Destination</FieldLabel>
+            </div>
             <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="dest-label">
               {DESTS.map((d) => (
                 <button
@@ -430,8 +473,13 @@ export default function Audiences() {
                 {e}
               </p>
             ))}
+            {!plan && summary && <p className="help-text mt-2">Builds the exact payload for the selected destination. Nothing is sent.</p>}
             {plan && (
               <div key={`${plan.destination}-${plan.eligible}`} className="animate-fade-up mt-4 space-y-3">
+                <div className="flex items-center text-xs text-ink-soft">
+                  What these numbers mean
+                  <HelpTip text={H.syncResult} align="start" />
+                </div>
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="rounded-[4px] bg-cream p-2">
                     <p className="text-lg font-medium">{fmt(plan.matched)}</p>matched

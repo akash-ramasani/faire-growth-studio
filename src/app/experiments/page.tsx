@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { GettingStarted, HelpTip, SectionTitle } from "@/components/Help";
 import { toast } from "@/components/Toast";
+import { HELP } from "@/lib/help";
+
+const H = HELP.experiments;
 import { useCountUp } from "@/lib/useCountUp";
 import { extractFeatures } from "@/lib/experiments/features";
 import { confidenceSeries, decision, totals, type Experiment } from "@/lib/experiments/model";
@@ -86,7 +90,8 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
             </p>
             <h2 className="mt-1 font-serif text-2xl">{exp.name}</h2>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <HelpTip text={H.simulate} align="end" />
             <button className="btn-outline btn-sm" disabled={!running} onClick={() => run(1)}>
               Simulate 1 day
             </button>
@@ -96,8 +101,18 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
             <button className="btn btn-sm" disabled={!running || d.status === "collecting"} onClick={finish} title={d.status === "collecting" ? d.reason : "Close the test and save learnings"}>
               Conclude
             </button>
+            <HelpTip text={H.conclude} align="end" />
           </div>
         </div>
+        {running && (
+          <p className="help-text mt-3" aria-live="polite">
+            {d.status === "collecting"
+              ? `Next: simulate more traffic. ${d.reason}. Conclude unlocks when there's enough evidence.`
+              : d.status === "winner"
+                ? `Next: press Conclude. Variant ${d.winner} is the winner, and its winning patterns will be saved as learnings.`
+                : "Next: press Conclude. There's no clear winner, so the original (A) stays and nothing is learned."}
+          </p>
+        )}
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           {(["A", "B"] as const).map((k) => {
@@ -124,7 +139,10 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
                     <dd className="tabular-nums">{arm.conversions.toLocaleString()}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-muted">Rate (95% CI)</dt>
+                    <dt className="flex items-center text-xs text-muted">
+                      Rate (95% CI)
+                      <HelpTip text={H.rate} align="end" />
+                    </dt>
                     <dd className="tabular-nums">
                       {arm.visitors ? (
                         <>
@@ -143,9 +161,15 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
 
         <div className="mt-5 grid gap-5 border-t border-line pt-5 md:grid-cols-[220px_1fr]">
           <div>
-            <p className="text-xs text-muted">P(B beats A)</p>
+            <p className="flex items-center text-xs text-muted">
+              P(B beats A)
+              <HelpTip text={H.probability} align="start" />
+            </p>
             <p className="font-serif text-4xl tabular-nums">{exp.days.length ? `${Math.round(animatedP)}%` : "–"}</p>
-            <p className="mt-1 text-xs text-ink-soft">{exp.days.length ? `Lift ${lift >= 0 ? "+" : ""}${pct(lift)}` : "No traffic yet"}</p>
+            <p className="mt-1 flex items-center text-xs text-ink-soft">
+              {exp.days.length ? `Lift ${lift >= 0 ? "+" : ""}${pct(lift)}` : "No traffic yet"}
+              {exp.days.length > 0 && <HelpTip text={H.lift} align="start" />}
+            </p>
           </div>
           <div>
             <Trend series={confidenceSeries(exp)} />
@@ -228,10 +252,22 @@ function ExperimentsInner() {
         the same audience, so each test makes the next page better.
       </p>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="mt-6">
+        <GettingStarted
+          id="experiments"
+          title="How the learning loop works"
+          steps={[
+            { title: "Start a test", body: "Use Quick demo test, or generate variants A and B in Landing pages and press Start A/B test." },
+            { title: "Simulate traffic", body: "Each click adds simulated visitors. The chart shows how sure we are that B beats A; Conclude unlocks at 95% with enough visitors." },
+            { title: "Conclude and reuse", body: "The winner's patterns are saved to Learning memory and added to Claude's instructions for the next page for that audience." },
+          ]}
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <aside className="min-w-0 space-y-6">
           <div className="card p-4">
-            <p className="section-title">Tests</p>
+            <SectionTitle help={H.tests}>Tests</SectionTitle>
             {experiments.length === 0 && <p className="text-sm text-ink-soft">{loaded ? "No tests yet." : "Loading…"}</p>}
             {error && <p className="error-text">{error}</p>}
             <ul className="space-y-1">
@@ -252,11 +288,12 @@ function ExperimentsInner() {
             <button className="btn-outline btn-sm mt-3 w-full" onClick={demo} disabled={creating}>
               {creating ? "Creating…" : "+ Quick demo test"}
             </button>
+            <p className="help-text mt-2">{H.demo}</p>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <p className="section-title mb-0">Learning memory</p>
+              <SectionTitle help={H.memory} className="mb-0">Learning memory</SectionTitle>
               {learnings.length > 0 && (
                 <button className="link text-xs text-ink-soft" onClick={() => clearLearnings().then(() => toast("Learning memory cleared"))}>
                   Clear

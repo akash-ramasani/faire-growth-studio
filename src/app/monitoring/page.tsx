@@ -1,6 +1,10 @@
 "use client";
 
+import { HelpTip, SectionTitle } from "@/components/Help";
 import { toast } from "@/components/Toast";
+import { HELP } from "@/lib/help";
+
+const H = HELP.monitoring;
 import { clearRuns, useRuns, type RunRecord } from "@/lib/store";
 
 const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : "–");
@@ -41,12 +45,12 @@ export default function Monitoring() {
   );
 
   const tiles = [
-    { label: "Pages generated", value: String(pages.length) },
-    { label: "First-pass eval rate", value: pct(firstPass, pages.length), hint: "Claude output passed every blocking check" },
-    { label: "Repair rate", value: pct(repaired, pages.length), hint: "Needed one repair round" },
-    { label: "Fallback rate", value: pct(fallback, pages.length), hint: "Served the approved template" },
-    { label: "p50 / p95 latency", value: pages.length ? `${(quantile(latencies, 0.5) / 1000).toFixed(1)}s / ${(quantile(latencies, 0.95) / 1000).toFixed(1)}s` : "–" },
-    { label: "Tokens used", value: tokens.toLocaleString() },
+    { label: "Pages generated", value: String(pages.length), hint: H.overview },
+    { label: "First-pass eval rate", value: pct(firstPass, pages.length), hint: H.firstPass },
+    { label: "Repair rate", value: pct(repaired, pages.length), hint: H.repair },
+    { label: "Fallback rate", value: pct(fallback, pages.length), hint: H.fallback },
+    { label: "p50 / p95 latency", value: pages.length ? `${(quantile(latencies, 0.5) / 1000).toFixed(1)}s / ${(quantile(latencies, 0.95) / 1000).toFixed(1)}s` : "–", hint: H.latency },
+    { label: "Tokens used", value: tokens.toLocaleString(), hint: H.tokens },
   ];
 
   return (
@@ -74,8 +78,11 @@ export default function Monitoring() {
 
       <div className="stagger mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {tiles.map((t, i) => (
-          <div key={t.label} className="card p-4" title={t.hint} style={{ "--i": i } as React.CSSProperties}>
-            <p className="text-xs text-muted">{t.label}</p>
+          <div key={t.label} className="card p-4" style={{ "--i": i } as React.CSSProperties}>
+            <p className="flex items-center text-xs text-muted">
+              {t.label}
+              <HelpTip text={t.hint} align={i % 2 ? "end" : "start"} />
+            </p>
             <p className="mt-1 font-serif text-2xl">{t.value}</p>
           </div>
         ))}
@@ -83,7 +90,7 @@ export default function Monitoring() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[380px_1fr]">
         <div className="card p-5">
-          <p className="section-title">Eval pass rate by check</p>
+          <SectionTitle help={H.byCheck}>Eval pass rate by check</SectionTitle>
           {checkStats.size === 0 && <p className="mt-2 text-sm text-muted">Generate a page to see results.</p>}
           <div className="mt-3 space-y-3">
             {[...checkStats.entries()].map(([id, s]) => (

@@ -11,6 +11,44 @@ const PIPELINE = [
   { step: "Learn", body: "A/B test variants, call winners with a stopping rule, and feed what won into the next prompt." },
 ];
 
+const TOUR = [
+  {
+    title: "Generate a landing page",
+    href: "/pages",
+    cta: "Open Landing pages",
+    doIt: "Pick the \"Holiday restock\" preset and press Generate page.",
+    happens: "Claude writes the page in about 20 seconds, up to 15 checks run, and you see whether it passed first time, needed a repair, or used the safe template.",
+  },
+  {
+    title: "Try to break the checks",
+    href: "/pages",
+    cta: "Edit a headline",
+    doIt: "In Edit hero, type \"Guaranteed sales, risk-free\" into the headline.",
+    happens: "The claims check fails as you type and Publish locks. The server refuses it too, so a non-compliant page can't go live.",
+  },
+  {
+    title: "Run an A/B test",
+    href: "/experiments",
+    cta: "Open Experiments",
+    doIt: "Press Quick demo test, then Simulate 1 day until Conclude unlocks.",
+    happens: "A winner is called only with enough evidence. What it did differently is saved as a learning.",
+  },
+  {
+    title: "See the learning used",
+    href: "/pages",
+    cta: "Generate again",
+    doIt: "Back in Landing pages, keep \"Apply learnings\" ticked and generate a retailer page.",
+    happens: "The learnings are added to Claude's instructions, and the new page leads with what won.",
+  },
+  {
+    title: "Build an audience",
+    href: "/audiences",
+    cta: "Open Audiences",
+    doIt: "Type \"UK boutiques that spent over $2,000 and love our Instagram\" and press Build rule.",
+    happens: "Claude builds a rule from fields that exist and flags the Instagram part as unsupported instead of guessing. Then build a Braze or Meta payload with consent applied.",
+  },
+];
+
 const PRINCIPLES = [
   { title: "Constrain, then generate", body: "Enums for anything legal or brand would review: destinations, testimonials, categories. The model composes, it doesn't invent." },
   { title: "A defined failure mode", body: "Every path ends in a page that passes blocking evals. The source label tells the marketer which path they got and why." },
@@ -32,12 +70,13 @@ export default function Home() {
               monitoring and a defined failure mode before anything reaches a customer.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/pages" className="btn-outline">
+              <a href="#start-here" className="btn-outline">
+                New here? Take the 5-step tour
+              </a>
+              <Link href="/pages" className="inline-flex h-12 items-center rounded-[4px] border border-white/70 px-5 text-sm text-white transition hover:bg-white/10">
                 Build a landing page
               </Link>
-              <Link href="/audiences" className="inline-flex h-12 items-center rounded-[4px] border border-white/70 px-5 text-sm text-white transition hover:bg-white/10">
-                Build an audience
-              </Link>
+
             </div>
             <p className="mt-6 text-sm">
               Reviewing this for the role?{" "}
@@ -64,6 +103,33 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section id="start-here" className="scroll-mt-40 border-b border-line">
+        <div className="mx-auto max-w-[1440px] px-4 py-14 sm:px-8">
+          <p className="text-sm text-ink-soft">Start here</p>
+          <h2 className="mt-1 font-serif text-[30px] leading-[38px]">A 5-minute tour</h2>
+          <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+            Never used it before? Do these in order. Each step says what to click and what will happen. Every field in the app also has a{" "}
+            <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full border border-line text-[11px] align-middle">?</span> with a
+            plain explanation.
+          </p>
+          <ol className="stagger mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            {TOUR.map((t, i) => (
+              <li key={t.title} className="card card-hover flex flex-col p-5" style={{ "--i": i } as React.CSSProperties}>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-sm text-white">{i + 1}</span>
+                <p className="mt-3 text-lg leading-[26px] font-medium">{t.title}</p>
+                <p className="mt-3 text-xs font-medium text-ink">Do this</p>
+                <p className="mt-0.5 text-sm leading-5 text-ink-soft">{t.doIt}</p>
+                <p className="mt-3 text-xs font-medium text-ink">What happens</p>
+                <p className="mt-0.5 text-sm leading-5 text-ink-soft">{t.happens}</p>
+                <Link href={t.href} className="link mt-auto pt-4 text-sm font-medium">
+                  {t.cta} →
+                </Link>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 

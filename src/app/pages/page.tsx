@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Flag, LOCALE_FLAG } from "@/components/Flag";
+import { FieldLabel, GettingStarted, HelpTip, SectionTitle } from "@/components/Help";
 import { toast } from "@/components/Toast";
+import { HELP } from "@/lib/help";
+
+const H = HELP.studio;
 import { EvalList, EvalSummary } from "@/components/EvalList";
 import { LandingPage } from "@/components/LandingPage";
 import { CATEGORIES, CHANNELS, TONES, type Category } from "@/lib/landing/catalog";
@@ -116,6 +120,25 @@ function GeneratingPanel({ label }: { label: string }) {
         ))}
       </div>
     </div>
+  );
+}
+
+// One line under the action buttons that says what to do next and what will happen.
+function NextStep({ brief, hasA, hasB, loading }: { brief: Brief; hasA: boolean; hasB: boolean; loading: boolean }) {
+  let text: React.ReactNode;
+  if (loading) text = "Working… Claude is writing and the checks are running. This takes about 20 seconds.";
+  else if (brief.goal.trim().length < 10) text = "Add a goal of at least 10 characters to enable Generate.";
+  else if (!hasA) text = "Next: press Generate page. Claude writes it, up to 15 checks run, and the preview appears on the right (about 20 seconds).";
+  else if (!hasB) text = "Next: review the preview and Evals, then Publish. Or add Variant B to A/B test a different angle.";
+  else text = "Next: press Start A/B test to compare A and B with simulated traffic.";
+  return (
+    <p className="mt-3 flex gap-2 text-xs leading-[18px] text-ink-soft" aria-live="polite">
+      <svg viewBox="0 0 16 16" className="mt-px h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden>
+        <circle cx="8" cy="8" r="6.5" />
+        <path d="M8 7.2V11M8 5v.01" strokeLinecap="round" />
+      </svg>
+      <span>{text}</span>
+    </p>
   );
 }
 
@@ -243,10 +266,21 @@ export default function PagesStudio() {
         </div>
       </div>
 
+      <GettingStarted
+        id="studio"
+        title="How the landing page studio works"
+        steps={[
+          { title: "Fill in the brief", body: "Pick a preset or write your own: who it's for, the goal, the market. Hover any ? for what each field does." },
+          { title: "Generate", body: "Claude writes the page and up to 15 checks run automatically. You'll see whether it passed first time, needed a repair, or used the safe template." },
+          { title: "Publish or test", body: "Publish for a shareable link, or add Variant B and start an A/B test. Winning patterns are reused for the next page." },
+        ]}
+      />
+
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <aside className="space-y-5">
           <div className="card p-5">
-            <div className="mb-4 flex flex-wrap gap-2">
+            <FieldLabel help={H.presets}>Start from a preset</FieldLabel>
+            <div className="mb-5 flex flex-wrap gap-2">
               {PRESETS.map((p) => (
                 <button
                   key={p.label}
@@ -261,19 +295,19 @@ export default function PagesStudio() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="label" htmlFor="campaign">Campaign name</label>
+                <FieldLabel htmlFor="campaign" help={H.campaignName}>Campaign name</FieldLabel>
                 <input id="campaign" className="field" value={brief.campaignName} onChange={(e) => set("campaignName", e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label" htmlFor="aud">Audience</label>
+                  <FieldLabel htmlFor="aud" help={H.audience}>Audience</FieldLabel>
                   <select id="aud" className="field" value={brief.audience} onChange={(e) => set("audience", e.target.value as Brief["audience"])}>
                     <option value="retailer">Retailers</option>
                     <option value="brand">Brands</option>
                   </select>
                 </div>
                 <div>
-                  <label className="label" htmlFor="channel">Channel</label>
+                  <FieldLabel htmlFor="channel" help={H.channel} align="end">Channel</FieldLabel>
                   <select id="channel" className="field" value={brief.channel} onChange={(e) => set("channel", e.target.value as Brief["channel"])}>
                     {CHANNELS.map((c) => (
                       <option key={c} value={c}>
@@ -284,7 +318,7 @@ export default function PagesStudio() {
                 </div>
               </div>
               <div>
-                <span className="label" id="market-label">Market</span>
+                <FieldLabel id="market-label" help={H.market}>Market</FieldLabel>
                 <div className="segmented segmented-fill" role="radiogroup" aria-labelledby="market-label">
                   {LOCALES.map((l: Locale) => (
                     <button
@@ -302,19 +336,19 @@ export default function PagesStudio() {
                 </div>
               </div>
               <div>
-                <label className="label" htmlFor="goal">Goal</label>
+                <FieldLabel htmlFor="goal" help={H.goal}>Goal</FieldLabel>
                 <textarea id="goal" rows={3} className="field resize-none" value={brief.goal} onChange={(e) => set("goal", e.target.value)} />
               </div>
               <div>
-                <label className="label" htmlFor="msg">Key message</label>
+                <FieldLabel htmlFor="msg" help={H.keyMessage}>Key message</FieldLabel>
                 <input id="msg" className="field" value={brief.keyMessage} onChange={(e) => set("keyMessage", e.target.value)} />
               </div>
               <div>
-                <label className="label" htmlFor="offer">Offer (optional)</label>
+                <FieldLabel htmlFor="offer" help={H.offer}>Offer (optional)</FieldLabel>
                 <input id="offer" className="field" placeholder="e.g. Free shipping on qualifying orders" value={brief.offer} onChange={(e) => set("offer", e.target.value)} />
               </div>
               <div>
-                <span className="label" id="tone-label">Tone</span>
+                <FieldLabel id="tone-label" help={H.tone}>Tone</FieldLabel>
                 <div className="segmented segmented-fill" role="radiogroup" aria-labelledby="tone-label">
                   {TONES.map((t) => (
                     <button
@@ -330,7 +364,7 @@ export default function PagesStudio() {
                 </div>
               </div>
               <div>
-                <span className="label">Focus categories</span>
+                <FieldLabel help={H.focusCategories}>Focus categories</FieldLabel>
                 <div className="flex flex-wrap gap-1.5">
                   {CATEGORIES.map((c) => {
                     const on = brief.focusCategories.includes(c);
@@ -363,13 +397,14 @@ export default function PagesStudio() {
                     See them
                   </Link>
                 </span>
+                <HelpTip text={H.learnings} align="end" />
               </label>
             )}
             <div className="mt-5 flex gap-2">
               <button className="btn flex-1" disabled={loading !== null || brief.goal.length < 10} onClick={() => generate("A")}>
                 {loading === "A" ? "Generating…" : drafts.length ? "Regenerate" : "Generate page"}
               </button>
-              <button className="btn-outline" disabled={loading !== null || !draftA} onClick={() => generate("B")} title="Generate a B variant for an A/B test">
+              <button className="btn-outline" disabled={loading !== null || !draftA} onClick={() => generate("B")} title={draftA ? H.variantB : "Generate a page first"}>
                 {loading === "B" ? "…" : "+ Variant B"}
               </button>
             </div>
@@ -377,16 +412,17 @@ export default function PagesStudio() {
               <button className="btn-outline btn-sm" disabled={loading !== null || !draftA} onClick={() => generate("localize")}>
                 {loading === "localize" ? "Localizing…" : "Localize to all markets"}
               </button>
-              <button className="btn-outline btn-sm" disabled={!draftA || !draftB} onClick={startTest} title="Needs variants A and B">
+              <button className="btn-outline btn-sm" disabled={!draftA || !draftB} onClick={startTest} title={draftB ? H.startTest : "Generate Variant B first"}>
                 Start A/B test →
               </button>
             </div>
+            <NextStep brief={brief} hasA={!!draftA} hasB={!!draftB} loading={loading !== null} />
             {error && <p className="mt-3 text-sm text-fail">{error}</p>}
           </div>
 
           {spec && (
             <div className="card p-5">
-              <p className="section-title mb-1">Edit hero</p>
+              <SectionTitle help={H.editHero} className="mb-1">Edit hero</SectionTitle>
               <p className="help-text mt-0 mb-3">Evals re-run on every keystroke.</p>
               <div className="space-y-3">
                 <div>
@@ -436,6 +472,7 @@ export default function PagesStudio() {
             <div className="card overflow-hidden">
               <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
                 {drafts.length > 1 && (
+                  <div className="flex items-center">
                   <div className="segmented" role="tablist" aria-label="Drafts">
                     {drafts.map((d) => (
                       <button
@@ -453,6 +490,8 @@ export default function PagesStudio() {
                       </button>
                     ))}
                   </div>
+                  <HelpTip text={H.drafts} />
+                  </div>
                 )}
                 <div className="segmented" role="tablist" aria-label="View">
                   {(["preview", "evals", "json"] as const).map((t) => (
@@ -461,16 +500,26 @@ export default function PagesStudio() {
                     </button>
                   ))}
                 </div>
+                <HelpTip text={H.views} />
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                   <EvalSummary evals={evals} />
-                  <button className="btn btn-sm" disabled={blocked || publishing} onClick={publish} title={blocked ? "Fix blocking evals to publish" : "Publish page"}>
+                  {blocked && (
+                    <button type="button" onClick={() => setTab("evals")} className="link text-xs text-fail">
+                      Fix failing checks to publish
+                    </button>
+                  )}
+                  <button className="btn btn-sm" disabled={blocked || publishing} onClick={publish} title={blocked ? "Fix the failing checks to publish" : H.publish}>
                     {publishing ? "Publishing…" : "Publish"}
                   </button>
+                  <HelpTip text={H.publish} align="end" />
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-cream/60 px-4 py-2 text-xs text-ink-soft">
-                <span className={`rounded-[2px] px-1.5 leading-5 ${SOURCE_COPY[current.source].cls}`}>{SOURCE_COPY[current.source].label}</span>
+                <span className="inline-flex items-center">
+                  <span className={`rounded-[2px] px-1.5 leading-5 ${SOURCE_COPY[current.source].cls}`}>{SOURCE_COPY[current.source].label}</span>
+                  <HelpTip text={H.source} align="start" />
+                </span>
                 {edited && <span className="tag bg-white">Edited by marketer</span>}
                 <span className="inline-flex items-center gap-1.5">
                   <Flag code={LOCALE_FLAG[current.spec.brief.locale]} />

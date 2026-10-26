@@ -1,4 +1,24 @@
 import type { EvalResult } from "@/lib/landing/schema";
+import { HelpTip } from "./Help";
+
+// Why each check exists, for people seeing the list for the first time.
+const WHY: Record<string, string> = {
+  schema: "The page must have every section the layout expects, using only approved options. Otherwise it can't render correctly.",
+  length: "Each text slot has a maximum length so the design doesn't break, for example a 70-character headline.",
+  structure: "The template expects 3 benefits, 3–4 categories and 3–4 FAQs. Too few or too many breaks the layout.",
+  audience: "A retailer page must link to retailer sign-up and use a retailer quote (and the same for brands), so nobody lands in the wrong place.",
+  tracking: "The button link must carry UTM tags so signups are credited to the right campaign and channel.",
+  claims: "Blocks risky marketing claims like 'guaranteed', '#1' or 'risk-free' that legal would reject.",
+  qualifiers: "Offers like free shipping or Net 60 must say who qualifies, for example 'on qualifying orders'.",
+  placeholders: "Catches leftover template text like [BRAND] or TODO before it reaches customers.",
+  alt: "The hero image needs a real description for screen-reader users.",
+  language: "Checks the copy is actually written in the market's language.",
+  currency: "Only the market's own currency may appear, for example no $ on a UK page.",
+  spelling: "UK pages must use British spelling (colour, favourite).",
+  readability: "Advisory: simpler copy (grade 9 or below) usually converts better.",
+  offer: "Advisory: the offer from the brief should appear somewhere on the page.",
+  focus: "Advisory: the categories you picked in the brief should be featured.",
+};
 
 export function EvalSummary({ evals }: { evals: EvalResult[] }) {
   const blocking = evals.filter((e) => e.severity === "blocking" && !e.passed).length;
@@ -29,9 +49,10 @@ export function EvalList({ evals }: { evals: EvalResult[] }) {
               {e.passed ? "✓" : "!"}
             </span>
             <div className="min-w-0">
-              <p className="text-sm font-medium">
+              <p className="flex flex-wrap items-center text-sm font-medium">
                 {e.name}
                 <span className="tag ml-2 font-normal capitalize">{e.severity}</span>
+                {WHY[e.id] && <HelpTip text={WHY[e.id]} align="start" />}
               </p>
               <p className="mt-0.5 break-words text-xs text-ink-soft">{e.detail}</p>
             </div>
