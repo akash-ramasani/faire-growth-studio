@@ -20,7 +20,9 @@ export function slugify(s: string): string {
 
 // Tracking and URLs are assembled in code so attribution never depends on model output.
 export function buildCtaUrl(brief: Brief, destination: PageCopy["hero"]["destination"]): string {
-  const url = new URL(LOCALE_CONFIG[brief.locale].pathPrefix + DESTINATIONS[destination].path, "https://www.faire.com");
+  const path =
+    destination === "brand_storefront" && brief.featuredBrand ? `/direct/${brief.featuredBrand.slug}` : DESTINATIONS[destination].path;
+  const url = new URL(LOCALE_CONFIG[brief.locale].pathPrefix + path, "https://www.faire.com");
   const utm = UTM[brief.channel];
   url.searchParams.set("utm_source", utm.source);
   url.searchParams.set("utm_medium", utm.medium);

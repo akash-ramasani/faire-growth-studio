@@ -202,6 +202,14 @@ const B_HEADLINES: Record<Locale, Record<Brief["audience"], string>> = {
   "de-DE": { retailer: "Jetzt bestücken, flexibel zahlen", brand: "Lassen Sie sich von Läden finden" },
 };
 
+// Featured-brand hero, by market. It names the brand and says nothing else about it.
+const FEATURED: Record<Locale, (name: string) => { eyebrow: string; headline: string; ctaLabel: string }> = {
+  "en-US": (n) => ({ eyebrow: "Now on Faire", headline: `Stock ${n} in your shop`, ctaLabel: "Shop wholesale" }),
+  "en-GB": (n) => ({ eyebrow: "Now on Faire", headline: `Stock ${n} in your shop`, ctaLabel: "Shop wholesale" }),
+  "fr-FR": (n) => ({ eyebrow: "Disponible sur Faire", headline: `Proposez ${n} en boutique`, ctaLabel: "Voir la marque" }),
+  "de-DE": (n) => ({ eyebrow: "Jetzt auf Faire", headline: `${n} für Ihren Laden`, ctaLabel: "Marke ansehen" }),
+};
+
 const MARKETS: Record<Locale, MarketText> = { "en-US": EN, "en-GB": EN, "fr-FR": FR, "de-DE": DE };
 
 // Drop the offer rather than truncate mid-sentence when it would overflow the subhead slot.
@@ -221,14 +229,16 @@ export function templateCopy(brief: Brief, variant: "A" | "B" = "A"): PageCopy {
   const offerLine = useOffer ? ` ${offer.replace(/\.?$/, ".")}` : "";
 
   const b = variant === "B";
+  const featured = brief.featuredBrand && brief.audience === "retailer" ? FEATURED[brief.locale](brief.featuredBrand.name) : null;
   // Deep copy: callers may edit the page, and must never mutate the shared reviewed copy.
   return structuredClone({
     ...text,
     hero: {
       ...text.hero,
-      headline: b ? B_HEADLINES[brief.locale][brief.audience] : text.hero.headline,
+      ...(featured && { eyebrow: featured.eyebrow, ctaLabel: featured.ctaLabel }),
+      headline: featured ? featured.headline : b ? B_HEADLINES[brief.locale][brief.audience] : text.hero.headline,
       subhead: fit(text.hero.subhead, offerLine),
-      destination: brief.audience === "retailer" ? "retailer_signup" : "brand_signup",
+      destination: featured ? "brand_storefront" : brief.audience === "retailer" ? "retailer_signup" : "brand_signup",
       palette: b ? "clay" : brief.audience === "retailer" ? "sand" : "sage",
     },
     // B leads with a different benefit, which is the main thing the test learns about.

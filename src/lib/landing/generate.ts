@@ -41,6 +41,13 @@ function briefPrompt(brief: Brief, { variantHint, learnings = [] }: GenerateOpti
     brief.offer && `Offer: ${brief.offer}`,
     `Tone: ${brief.tone}`,
     brief.focusCategories.length > 0 && `Focus categories: ${brief.focusCategories.join(", ")}`,
+    brief.featuredBrand &&
+      [
+        `Featured brand: ${brief.featuredBrand.name}. This page invites independent retailers to stock ${brief.featuredBrand.name} through Faire. Use destination "brand_storefront".`,
+        `You know nothing about ${brief.featuredBrand.name} beyond its name and its category (${brief.focusCategories.join(", ") || "not given"}).`,
+        "Do not state or imply anything about the brand's products, materials, ingredients, origin, location, founders, history, awards, certifications, values, size or popularity.",
+        "Describe what Faire gives retailers and what the category offers in general. You may name the brand, but only as a maker in that category.",
+      ].join(" "),
     variantHint && `Variant direction: ${variantHint}`,
     learnings.length > 0 &&
       `What has won in past A/B tests for similar pages (apply where it fits the brief, don't copy wording):\n${learnings.map((l) => `- ${l}`).join("\n")}`,

@@ -13,6 +13,14 @@ export const BriefSchema = z.object({
   tone: z.enum(TONES).default("warm"),
   focusCategories: z.array(z.enum(CATEGORIES)).max(4).default([]),
   locale: z.enum(LOCALES).default("en-US"),
+  // A real Faire storefront the page invites retailers to stock. Only its name and slug are known,
+  // so the model is told (and checked) not to state any facts about it.
+  featuredBrand: z
+    .object({
+      name: z.string().min(2).max(40),
+      slug: z.string().regex(/^[a-z0-9]{3,40}$/),
+    })
+    .optional(),
 });
 export type Brief = z.infer<typeof BriefSchema>;
 

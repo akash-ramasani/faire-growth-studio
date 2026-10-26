@@ -5,6 +5,11 @@ import { PageCopySchema, type EvalResult, type PageSpec } from "./schema";
 // Deterministic guardrails that run on every generated page before a marketer can publish.
 // "blocking" failures trigger a repair attempt, then the template fallback; "warning"s are surfaced.
 
+// Phrases that assert facts about a specific business. Allowed on generic Faire pages via other
+// checks, but blocked whenever a real brand is featured, since none of it can be verified.
+const BRAND_FACTS =
+  /\b(founded|established|est\.|since (?:19|20)\d{2}|award[- ]?winning|awards?|certified|made in [A-Z][a-z]+|handmade in|hand[- ]poured in|family[- ]owned|woman[- ]owned|women[- ]owned|black[- ]owned|organic|vegan|cruelty[- ]free|fair[- ]trade|best[- ]?selling|as seen in|featured in|loved by|trusted by|\d[\d,]*\+? (?:stores|retailers|shops|customers|years))\b/i;
+
 const LIMITS: Array<[string, (s: PageSpec) => string[], number]> = [
   ["hero.headline", (s) => [s.hero.headline], 70],
   ["hero.subhead", (s) => [s.hero.subhead], 160],
@@ -143,6 +148,24 @@ export function runEvals(spec: PageSpec): EvalResult[] {
   if (locale === "en-GB") {
     const us = joined.match(US_SPELLINGS);
     add("spelling", "British spelling", "blocking", !us, us ? `American spelling: "${us[0]}"` : "No American spellings found");
+  }
+
+  // Featured real brands: we know only the name and category, so any factual-sounding claim
+  // (history, origin, awards, certifications, materials, scale) must have been invented.
+  const featured = spec.brief.featuredBrand;
+  if (featured) {
+    const invented = copy.flatMap((t) => (BRAND_FACTS.test(t) ? [t.match(BRAND_FACTS)?.[0] ?? t] : []));
+    add(
+      "brandFacts",
+      `No invented facts about ${featured.name}`,
+      "blocking",
+      invented.length === 0,
+      invented.length ? `Unverifiable claim: "${invented[0]}"` : "Only the brand's name and category are used",
+    );
+    const linked = spec.hero.destination === "brand_storefront";
+    add("storefront", `Links to ${featured.name}'s Faire storefront`, "blocking", linked, linked ? `faire.com/direct/${featured.slug}` : `CTA goes to ${spec.hero.destination}`);
+  } else if (spec.hero.destination === "brand_storefront") {
+    add("storefront", "Storefront link has a featured brand", "blocking", false, "brand_storefront needs a featured brand in the brief");
   }
 
   // Readability and offer-keyword matching are English-only heuristics; other markets skip them.

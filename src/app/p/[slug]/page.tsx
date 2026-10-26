@@ -10,7 +10,9 @@ export const instant = false;
 
 export async function generateMetadata({ params }: PageProps<"/p/[slug]">): Promise<Metadata> {
   const page = await getPublished((await params).slug);
-  return page ? { title: page.spec.metaTitle, description: page.spec.metaDescription } : {};
+  // Demo pages: never indexed, so nothing here is mistaken for a real Faire or brand page in search.
+  const robots = { index: false, follow: false };
+  return page ? { title: page.spec.metaTitle, description: page.spec.metaDescription, robots } : { robots };
 }
 
 export default async function PublishedLandingPage({ params }: PageProps<"/p/[slug]">) {

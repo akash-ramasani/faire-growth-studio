@@ -28,6 +28,8 @@ export const DESTINATIONS = {
   category_browse: { path: "/category", label: "Browse category", audience: "retailer" },
   insider: { path: "/insider", label: "Faire Insider", audience: "retailer" },
   brand_referral: { path: "/brand-portal/referrals", label: "Brand referrals", audience: "brand" },
+  // Resolved in code to /direct/<slug> of the brief's featured brand.
+  brand_storefront: { path: "/direct", label: "Featured brand's Faire storefront", audience: "retailer" },
 } as const;
 export type DestinationKey = keyof typeof DESTINATIONS;
 export const DESTINATION_KEYS = Object.keys(DESTINATIONS) as [DestinationKey, ...DestinationKey[]];
