@@ -181,6 +181,14 @@ export function runEvals(spec: PageSpec): EvalResult[] {
     add("offer", "Brief's offer appears in the copy", "warning", hit, hit ? "Offer is referenced" : `None of: ${keywords.join(", ")}`);
   }
 
+  // Offers the brief didn't ask for: real Faire terms, but not this campaign's message.
+  if (!spec.brief.offer.trim()) {
+    const OFFERS = /\bnet ?60\b|\bfree (shipping|delivery|returns)\b|\b60 (jours|tage|tagen)\b|livraison gratuite|retours? gratuits?|kostenlose[nr]? (versand|rücksendung)/i;
+    const heroText = [spec.hero.headline, spec.hero.subhead].join(" ");
+    const hit = heroText.match(OFFERS);
+    add("unrequestedOffer", "No offer the brief didn't ask for", "warning", !hit, hit ? `Hero mentions "${hit[0]}" but the brief has no offer` : "Offers only where the brief asks");
+  }
+
   if (spec.brief.focusCategories.length) {
     const names = new Set(spec.categories.map((c) => c.name));
     const missing = spec.brief.focusCategories.filter((c) => !names.has(c));

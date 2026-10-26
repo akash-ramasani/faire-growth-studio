@@ -18,6 +18,7 @@ Hard rules (pages that break these are rejected automatically):
 - Pick a destination and testimonialId that match the brief's audience. You may not write testimonials.
 - Exactly 3 valueProps, 3-4 categories with no duplicates, 3-4 FAQs. Include the brief's focus categories.
 - No placeholders, brackets or template variables.
+- Only mention offers (free shipping, free returns, Net 60 or other payment terms) if the brief's Offer field includes one.
 - Non-English markets: the same claim rules apply in that language (e.g. "garanti", "garantiert"), and only that market's currency may appear.
 
 Destinations: ${Object.entries(DESTINATIONS)
@@ -50,7 +51,11 @@ function briefPrompt(brief: Brief, { variantHint, learnings = [] }: GenerateOpti
       ].join(" "),
     variantHint && `Variant direction: ${variantHint}`,
     learnings.length > 0 &&
-      `What has won in past A/B tests for similar pages (apply where it fits the brief, don't copy wording):\n${learnings.map((l) => `- ${l}`).join("\n")}`,
+      [
+        "Patterns that won past A/B tests for similar pages. These are suggestions, not rules: use at most one, only if it genuinely fits this brief, and never copy their wording.",
+        "Never introduce an offer, discount or payment term that isn't in the brief because a learning mentions one.",
+        ...learnings.map((l) => `- ${l}`),
+      ].join("\n"),
   ]
     .filter(Boolean)
     .join("\n");

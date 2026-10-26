@@ -90,3 +90,11 @@ it("returns a fresh copy of the template every time", () => {
   expect(page().closing.headline).not.toBe("mutated");
   expect(page().valueProps[0].title).not.toBe("mutated");
 });
+
+it("warns when the hero names an offer the brief didn't ask for", () => {
+  const noOffer = BriefSchema.parse({ ...retailer, offer: "" });
+  const spec = assembleSpec(templateCopy(noOffer), noOffer);
+  expect(runEvals(spec).find((e) => e.id === "unrequestedOffer")?.passed).toBe(true);
+  spec.hero.headline = "Stock up with Net 60 terms for approved retailers";
+  expect(runEvals(spec).find((e) => e.id === "unrequestedOffer")?.passed).toBe(false);
+});

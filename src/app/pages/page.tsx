@@ -148,7 +148,7 @@ const SOURCE_TOAST: Record<GenerationResult["source"], string> = {
   template_fallback: "served from the approved template",
 };
 
-type Draft = { key: string; label: string; result: GenerationResult; learningsApplied: number };
+type Draft = { key: string; label: string; result: GenerationResult; learningsApplied: number; exploring?: boolean };
 
 export default function PagesStudio() {
   const router = useRouter();
@@ -184,7 +184,7 @@ export default function PagesStudio() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Generation failed");
-    return data as GenerationResult & { learningsApplied: number };
+    return data as GenerationResult & { learningsApplied: number; exploring?: boolean };
   }
 
 
@@ -196,7 +196,7 @@ export default function PagesStudio() {
       if (mode === "localize") {
         const others = LOCALES.filter((l) => l !== brief.locale);
         const results = await Promise.all(others.map((locale) => requestPage({ ...brief, locale })));
-        const localized = others.map((locale, i) => ({ key: locale, label: LOCALE_CONFIG[locale].flag, result: results[i], learningsApplied: results[i].learningsApplied }));
+        const localized = others.map((locale, i) => ({ key: locale, label: LOCALE_CONFIG[locale].flag, result: results[i], learningsApplied: results[i].learningsApplied, exploring: results[i].exploring }));
         setDrafts((d) => [...d.filter((x) => x.key === "A" || x.key === "B"), ...localized]);
         setActiveKey(others[0]);
         toast(`Localized for ${others.length} markets`, { tone: "success" });
@@ -206,7 +206,7 @@ export default function PagesStudio() {
             ? `Write a clearly different B variant from this A headline: "${draftA?.result.spec.hero.headline}". Lead with a different benefit and use a different palette.`
             : undefined;
         const result = await requestPage(brief, hint);
-        const draft = { key: mode, label: `Variant ${mode}`, result, learningsApplied: result.learningsApplied };
+        const draft = { key: mode, label: `Variant ${mode}`, result, learningsApplied: result.learningsApplied, exploring: result.exploring };
         setDrafts((d) => (mode === "A" ? [draft] : [...d.filter((x) => x.key !== "B"), draft]));
         setActiveKey(mode);
         toast(`Variant ${mode} ${SOURCE_TOAST[result.source]}`, { tone: result.source === "template_fallback" ? "default" : "success" });
@@ -527,6 +527,12 @@ export default function PagesStudio() {
                 </span>
                 {currentDraft.learningsApplied > 0 && current.source !== "template_fallback" && (
                   <span className="tag bg-sage">{currentDraft.learningsApplied} learnings applied</span>
+                )}
+                {currentDraft.exploring && (
+                  <span className="inline-flex items-center">
+                    <span className="tag bg-white">Exploration holdout</span>
+                    <HelpTip text="About 30% of campaigns skip past learnings on purpose. That keeps pages varied instead of converging on old winners, and keeps measuring whether the learnings still help." align="start" />
+                  </span>
                 )}
                 <span>{(current.latencyMs / 1000).toFixed(1)}s</span>
                 <span>

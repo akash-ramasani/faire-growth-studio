@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advance, conclude, createExperiment, decision, relevantLearnings, totals } from "../src/lib/experiments/model";
+import { advance, conclude, createExperiment, decision, inExplorationBucket, relevantLearnings, totals, type Learning } from "../src/lib/experiments/model";
 import { DECISION, decide, probBeatsControl } from "../src/lib/experiments/stats";
 import { assembleSpec } from "../src/lib/landing/build";
 import { runEvals } from "../src/lib/landing/evals";
@@ -42,10 +42,31 @@ describe("learning loop", () => {
     expect(experiment.status).toBe("concluded");
     if (experiment.outcome?.winner) {
       expect(learnings.length).toBeGreaterThan(0);
-      expect(relevantLearnings(learnings, { audience: "retailer", channel: "paid_social" })).toHaveLength(Math.min(5, learnings.length));
+      expect(relevantLearnings(learnings, { audience: "retailer", channel: "paid_social", offer: "Free shipping on qualifying orders" }).length).toBe(Math.min(3, learnings.length));
       expect(relevantLearnings(learnings, { audience: "brand", channel: "paid_social" })).toEqual([]);
     } else {
       expect(learnings).toEqual([]);
     }
+  });
+});
+
+describe("learning selection guards against convergence", () => {
+  const l = (id: string, text: string): Learning => ({ id, experimentId: "e", createdAt: Number(id), audience: "retailer", channel: "paid_social", locale: "en-US", text, lift: 0.2, confidence: 0.98, active: true });
+  const all = [l("1", "Leading with payment terms beat leading with product discovery"), l("2", "Naming the offer in the hero lifted conversion"), l("3", "A medium headline beat a short one")];
+
+  it("drops offer learnings when the brief has no offer", () => {
+    expect(relevantLearnings(all, { audience: "retailer", channel: "paid_social", offer: "" }).map((x) => x.id)).toEqual(["3"]);
+  });
+
+  it("keeps them when the brief has an offer", () => {
+    expect(relevantLearnings(all, { audience: "retailer", channel: "paid_social", offer: "Free shipping on qualifying orders" })).toHaveLength(3);
+  });
+
+  it("holds out roughly 30% of campaigns, stably", () => {
+    const names = Array.from({ length: 2000 }, (_, i) => `Campaign ${i}`);
+    const share = names.filter((n) => inExplorationBucket(n)).length / names.length;
+    expect(share).toBeGreaterThan(0.25);
+    expect(share).toBeLessThan(0.35);
+    expect(inExplorationBucket("Holiday Restock 2026")).toBe(inExplorationBucket("Holiday Restock 2026"));
   });
 });

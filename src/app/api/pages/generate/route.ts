@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { learningPrompt, relevantLearnings } from "@/lib/experiments/model";
+import { inExplorationBucket, learningPrompt, relevantLearnings } from "@/lib/experiments/model";
 import { listLearnings, logRun } from "@/lib/db/repo";
 import { generatePage } from "@/lib/landing/generate";
 import { BriefSchema } from "@/lib/landing/schema";
@@ -17,7 +17,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid brief", issues: parsed.error.issues }, { status: 400 });
   }
   const { brief, variantHint, applyLearnings } = parsed.data;
-  const learnings = applyLearnings ? relevantLearnings(await listLearnings(), brief).map(learningPrompt) : [];
+  const exploring = Boolean(applyLearnings) && inExplorationBucket(brief.campaignName);
+  const learnings = applyLearnings && !exploring ? relevantLearnings(await listLearnings(), brief).map(learningPrompt) : [];
   const result = await generatePage(brief, { variantHint, learnings });
   await logRun({
     at: Date.now(),
@@ -45,5 +46,5 @@ export async function POST(request: Request) {
       fallbackReason: result.fallbackReason,
     }),
   );
-  return Response.json({ ...result, learningsApplied: learnings.length });
+  return Response.json({ ...result, learningsApplied: learnings.length, exploring });
 }
