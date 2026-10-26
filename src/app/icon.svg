@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Growth Studio mark: serif F in Faire's burgundy and warm cream, drawn as a path so it needs no font. -->
+  <rect width="32" height="32" rx="5" fill="#41252a"/>
+  <path fill="#fbf8f6" d="M8 7h16v5h-1.4l-.5-2.1c-.2-.8-.6-1.2-1.5-1.2H14v6.4h3.6c.8 0 1.2-.4 1.3-1.1l.2-1.3h1.3v6.2h-1.3l-.2-1.3c-.1-.7-.5-1.1-1.3-1.1H14v6.9l2.3.5V25H8v-1.1l2.2-.5V8.6L8 8.1z"/>
+</svg>
