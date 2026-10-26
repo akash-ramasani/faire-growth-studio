@@ -338,3 +338,24 @@ body {
     transition-duration: 1ms !important;
   }
 }
+
+/* No horizontal scrollbars anywhere, on any device. Content that is wider than its box stays
+   scrollable by swipe, trackpad or shift+wheel; only the bar is hidden.
+   - The page itself never scrolls sideways (clip, unlike hidden, keeps the sticky header working).
+   - Firefox can't hide just the horizontal bar, so horizontally scrollable boxes hide theirs.
+   - WebKit/Blink (Chrome, Edge, Safari, iOS, Android) hide every horizontal bar globally. */
+html,
+body {
+  overflow-x: clip;
+}
+.overflow-x-auto,
+.overflow-x-scroll,
+.overflow-auto,
+.overflow-scroll,
+pre {
+  scrollbar-width: none;
+}
+::-webkit-scrollbar:horizontal {
+  display: none;
+  height: 0;
+}
