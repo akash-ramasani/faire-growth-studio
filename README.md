@@ -129,3 +129,8 @@ Production would differ in these ways:
 - SQLite is shared by every visitor of the demo. In production, runs would go to the warehouse (with alerting on the fallback-rate metric), pages to the CMS, and audiences would query the warehouse model directly.
 - The retailer table is synthetic and seeded. In production, the contract would be generated from the warehouse model (dbt / protobuf), so the schema and the UI can't drift.
 - Next steps: an LLM-as-judge eval for brief adherence (scored offline against the regression set, not used as a gate), a feedback loop from page conversion back into the prompt, and vendor-vs-build cost tracking per page.
+
+## Credits
+
+- Country flags: [`country-flag-icons`](https://www.npmjs.com/package/country-flag-icons) (MIT).
+- Braze logo: [theSVG](https://github.com/glincker/thesvg) (MIT). Meta and Google Ads logos are the vendors' marks, used only to identify sync destinations.

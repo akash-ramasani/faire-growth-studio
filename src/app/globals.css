@@ -150,7 +150,7 @@ body {
   }
   /* Segmented control: Help Center's Retailers/Brands toggle. */
   .segmented {
-    @apply inline-flex flex-wrap items-center gap-0.5 rounded-[50px] border border-line bg-white p-[2px];
+    @apply inline-flex items-center gap-0.5 rounded-[50px] border border-line bg-white p-[2px];
   }
   .segment {
     @apply inline-flex h-9 items-center rounded-[50px] px-4 text-sm leading-5 text-ink transition hover:bg-grey;
@@ -201,5 +201,140 @@ body {
   }
   .eyebrow {
     @apply text-sm text-ink-soft;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Motion. Short, eased, and off entirely for people who ask for reduced motion.
+   --------------------------------------------------------------------------------------------- */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+@keyframes shimmer {
+  from { background-position: -400px 0; }
+  to { background-position: 400px 0; }
+}
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes progress-indeterminate {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+@layer components {
+  .animate-fade-up {
+    animation: fade-up 420ms var(--ease-out) both;
+  }
+  .animate-fade-in {
+    animation: fade-in 300ms var(--ease-out) both;
+  }
+  .animate-scale-in {
+    animation: scale-in 260ms var(--ease-out) both;
+  }
+  .animate-pop {
+    animation: pop 360ms var(--ease-out);
+  }
+  /* Stagger children: give each a --i index. */
+  .stagger > * {
+    animation: fade-up 420ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+  }
+  .skeleton {
+    @apply rounded-[4px];
+    background: linear-gradient(90deg, #ebe5dc 0px, #f5f1eb 120px, #ebe5dc 240px);
+    background-size: 800px 100%;
+    animation: shimmer 1.3s linear infinite;
+  }
+  .spinner {
+    @apply inline-block h-4 w-4 rounded-full border-2 border-current border-r-transparent;
+    animation: spin 0.7s linear infinite;
+  }
+  .progress-track {
+    @apply relative h-[3px] w-full overflow-hidden bg-line;
+  }
+  .progress-track > span {
+    @apply absolute inset-y-0 left-0 w-2/5 bg-ink;
+    animation: progress-indeterminate 1.2s var(--ease-in-out) infinite;
+  }
+  /* Tactile feedback on every button-like control. */
+  .btn,
+  .btn-outline,
+  .pill,
+  .segment,
+  .option {
+    transition-property: color, background-color, border-color, outline-color, transform, box-shadow;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out);
+  }
+  .btn:active:not(:disabled),
+  .btn-outline:active:not(:disabled),
+  .pill:active,
+  .segment:active,
+  .option:active {
+    transform: scale(0.97);
+  }
+  /* Cards that link somewhere lift slightly on hover. */
+  .card-hover {
+    transition: transform 220ms var(--ease-out), border-color 220ms var(--ease-out), box-shadow 220ms var(--ease-out);
+  }
+  .card-hover:hover {
+    @apply border-ink;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -16px rgb(51 51 51 / 0.35);
+  }
+  /* Hide scrollbars on inner scroll areas while keeping them scrollable. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Segmented control that fills its container with equal-width options (no wrapping). */
+  .segmented-fill {
+    @apply grid w-full auto-cols-fr grid-flow-col;
+  }
+  .segmented-fill .segment {
+    @apply justify-center px-2;
+  }
+  /* Smooth open/close for <details> (FAQs, SQL preview). */
+  details > :not(summary) {
+    animation: fade-up 260ms var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
   }
 }

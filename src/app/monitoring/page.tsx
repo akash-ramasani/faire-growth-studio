@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/Toast";
 import { clearRuns, useRuns, type RunRecord } from "@/lib/store";
 
 const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : "–");
@@ -63,7 +64,7 @@ export default function Monitoring() {
           <button
             className="btn-outline btn-sm"
             onClick={() => {
-              clearRuns();
+              clearRuns().then(() => toast("Run log cleared"));
             }}
           >
             Clear log
@@ -71,9 +72,9 @@ export default function Monitoring() {
         )}
       </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        {tiles.map((t) => (
-          <div key={t.label} className="card p-4" title={t.hint}>
+      <div className="stagger mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+        {tiles.map((t, i) => (
+          <div key={t.label} className="card p-4" title={t.hint} style={{ "--i": i } as React.CSSProperties}>
             <p className="text-xs text-muted">{t.label}</p>
             <p className="mt-1 font-serif text-2xl">{t.value}</p>
           </div>
@@ -92,7 +93,7 @@ export default function Monitoring() {
                   <span className="tabular-nums text-ink-soft">{pct(s.pass, s.total)}</span>
                 </div>
                 <div className="mt-1 h-1.5 rounded-full bg-cream">
-                  <div className={`h-1.5 rounded-full ${s.pass === s.total ? "bg-pass" : "bg-warn"}`} style={{ width: `${(s.pass / s.total) * 100}%` }} />
+                  <div className={`h-1.5 rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${s.pass === s.total ? "bg-pass" : "bg-warn"}`} style={{ width: `${(s.pass / s.total) * 100}%` }} />
                 </div>
               </div>
             ))}

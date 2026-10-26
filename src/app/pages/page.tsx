@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Flag, LOCALE_FLAG } from "@/components/Flag";
+import { toast } from "@/components/Toast";
 import { EvalList, EvalSummary } from "@/components/EvalList";
 import { LandingPage } from "@/components/LandingPage";
 import { CATEGORIES, CHANNELS, TONES, type Category } from "@/lib/landing/catalog";
@@ -71,6 +73,58 @@ const CHANNEL_LABEL: Record<(typeof CHANNELS)[number], string> = {
   newsroom: "Newsroom",
 };
 
+const STEPS = ["Writing copy against the page schema", "Running up to 15 brand and compliance checks", "Repairing anything that failed", "Building tracking links"];
+
+// Shown while Claude works: an honest progress indicator (steps advance on a timer; the real
+// pipeline reports its path when it finishes) over a skeleton of the page layout.
+function GeneratingPanel({ label }: { label: string }) {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 4500);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="card animate-fade-in overflow-hidden" aria-busy="true">
+      <div className="progress-track">
+        <span />
+      </div>
+      <div className="flex items-center gap-3 border-b border-line px-4 py-3 text-sm">
+        <span className="spinner text-ink" aria-hidden />
+        <span className="font-medium">{label}</span>
+        <span key={step} className="animate-fade-up text-ink-soft">
+          {STEPS[step]}…
+        </span>
+      </div>
+      <div className="grid gap-8 bg-cream p-8 md:grid-cols-2">
+        <div className="space-y-4">
+          <div className="skeleton h-4 w-28" />
+          <div className="skeleton h-10 w-11/12" />
+          <div className="skeleton h-10 w-3/4" />
+          <div className="skeleton h-4 w-full" />
+          <div className="skeleton h-4 w-5/6" />
+          <div className="skeleton h-12 w-40" />
+        </div>
+        <div className="skeleton aspect-[6/5] w-full" />
+      </div>
+      <div className="grid grid-cols-3 gap-6 p-8">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="space-y-3">
+            <div className="skeleton h-10 w-10 rounded-full" />
+            <div className="skeleton h-5 w-2/3" />
+            <div className="skeleton h-4 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const SOURCE_TOAST: Record<GenerationResult["source"], string> = {
+  claude: "written by Claude and passed every blocking check",
+  claude_repaired: "written by Claude, fixed in one repair round",
+  template_fallback: "served from the approved template",
+};
+
 type Draft = { key: string; label: string; result: GenerationResult; learningsApplied: number };
 
 export default function PagesStudio() {
@@ -122,6 +176,7 @@ export default function PagesStudio() {
         const localized = others.map((locale, i) => ({ key: locale, label: LOCALE_CONFIG[locale].flag, result: results[i], learningsApplied: results[i].learningsApplied }));
         setDrafts((d) => [...d.filter((x) => x.key === "A" || x.key === "B"), ...localized]);
         setActiveKey(others[0]);
+        toast(`Localized for ${others.length} markets`, { tone: "success" });
       } else {
         const hint =
           mode === "B"
@@ -131,11 +186,14 @@ export default function PagesStudio() {
         const draft = { key: mode, label: `Variant ${mode}`, result, learningsApplied: result.learningsApplied };
         setDrafts((d) => (mode === "A" ? [draft] : [...d.filter((x) => x.key !== "B"), draft]));
         setActiveKey(mode);
+        toast(`Variant ${mode} ${SOURCE_TOAST[result.source]}`, { tone: result.source === "template_fallback" ? "default" : "success" });
       }
       setEdited(null);
       setTab("preview");
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
+      toast(message, { tone: "error" });
     } finally {
       setLoading(null);
     }
@@ -148,8 +206,10 @@ export default function PagesStudio() {
       { spec: draftA.result.spec, source: draftA.result.source },
       { spec: draftB.result.spec, source: draftB.result.source },
     );
-    if (created.ok && created.id) router.push(`/experiments?id=${created.id}`);
-    else setError(created.error ?? "Could not start the test");
+    if (created.ok && created.id) {
+      toast("A/B test started", { tone: "success" });
+      router.push(`/experiments?id=${created.id}`);
+    } else toast(created.error ?? "Could not start the test", { tone: "error" });
   }
 
   function editHero(field: "headline" | "subhead" | "ctaLabel", value: string) {
@@ -164,8 +224,10 @@ export default function PagesStudio() {
     // The server re-runs the evals and rebuilds the URL before anything is stored.
     const res = await publishPage(spec, current.source);
     setPublishing(false);
-    if (res.ok && res.slug) setJustPublished(res.slug);
-    else setError(res.error ?? "Publishing failed");
+    if (res.ok && res.slug) {
+      setJustPublished(res.slug);
+      toast(`Published /p/${res.slug}`, { tone: "success", action: { label: "Open", href: `/p/${res.slug}` } });
+    } else toast(res.error ?? "Publishing failed", { tone: "error" });
   }
 
   return (
@@ -223,7 +285,7 @@ export default function PagesStudio() {
               </div>
               <div>
                 <span className="label" id="market-label">Market</span>
-                <div className="segmented" role="radiogroup" aria-labelledby="market-label">
+                <div className="segmented segmented-fill" role="radiogroup" aria-labelledby="market-label">
                   {LOCALES.map((l: Locale) => (
                     <button
                       key={l}
@@ -233,7 +295,8 @@ export default function PagesStudio() {
                       title={LOCALE_CONFIG[l].label}
                       className={`segment ${brief.locale === l ? "segment-active" : ""}`}
                     >
-                      {LOCALE_CONFIG[l].flag}
+                      <Flag code={LOCALE_FLAG[l]} />
+                      <span className="ml-1.5">{LOCALE_CONFIG[l].flag}</span>
                     </button>
                   ))}
                 </div>
@@ -252,7 +315,7 @@ export default function PagesStudio() {
               </div>
               <div>
                 <span className="label" id="tone-label">Tone</span>
-                <div className="segmented" role="radiogroup" aria-labelledby="tone-label">
+                <div className="segmented segmented-fill" role="radiogroup" aria-labelledby="tone-label">
                   {TONES.map((t) => (
                     <button
                       key={t}
@@ -362,8 +425,10 @@ export default function PagesStudio() {
         </aside>
 
         <section className="min-w-0">
-          {!spec ? (
-            <div className="card flex min-h-[560px] flex-col items-center justify-center bg-cream p-10 text-center">
+          {loading && (loading !== "localize" || !spec) ? (
+            <GeneratingPanel label={loading === "localize" ? "Localizing for 3 markets" : `Generating variant ${loading}`} />
+          ) : !spec ? (
+            <div className="card animate-fade-in flex min-h-[560px] flex-col items-center justify-center bg-cream p-10 text-center">
               <p className="font-serif text-2xl">Your page preview appears here</p>
               <p className="mt-2 max-w-sm text-sm text-ink-soft">Pick a preset or write a brief, then generate. Claude writes the page; if it fails the checks twice, the approved template takes over.</p>
             </div>
@@ -381,8 +446,9 @@ export default function PagesStudio() {
                           setActiveKey(d.key);
                           setEdited(null);
                         }}
-                        className={`segment ${currentDraft?.key === d.key ? "segment-active" : ""}`}
+                        className={`segment gap-1.5 ${currentDraft?.key === d.key ? "segment-active" : ""}`}
                       >
+                        {LOCALE_FLAG[d.key] && <Flag code={LOCALE_FLAG[d.key]} />}
                         {d.label}
                       </button>
                     ))}
@@ -406,7 +472,10 @@ export default function PagesStudio() {
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-cream/60 px-4 py-2 text-xs text-ink-soft">
                 <span className={`rounded-[2px] px-1.5 leading-5 ${SOURCE_COPY[current.source].cls}`}>{SOURCE_COPY[current.source].label}</span>
                 {edited && <span className="tag bg-white">Edited by marketer</span>}
-                <span>{LOCALE_CONFIG[current.spec.brief.locale].label}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Flag code={LOCALE_FLAG[current.spec.brief.locale]} />
+                  {LOCALE_CONFIG[current.spec.brief.locale].label}
+                </span>
                 {currentDraft.learningsApplied > 0 && current.source !== "template_fallback" && (
                   <span className="tag bg-sage">{currentDraft.learningsApplied} learnings applied</span>
                 )}
@@ -420,7 +489,7 @@ export default function PagesStudio() {
 
               {error && <p className="border-b border-line bg-fail-bg px-4 py-2.5 text-sm text-fail">{error}</p>}
               {justPublished && (
-                <div className="flex items-center justify-between border-b border-line bg-pass-bg px-4 py-2.5 text-sm text-pass">
+                <div className="animate-fade-up flex items-center justify-between border-b border-line bg-pass-bg px-4 py-2.5 text-sm text-pass">
                   <span>Published to /p/{justPublished}. Anyone with the link can open it.</span>
                   <Link href={`/p/${justPublished}`} className="font-medium underline">
                     Open page
@@ -429,7 +498,7 @@ export default function PagesStudio() {
               )}
 
               {tab === "preview" && (
-                <div className="max-h-[78vh] overflow-y-auto">
+                <div key={currentDraft?.key + spec.hero.palette} className="animate-fade-in">
                   <LandingPage spec={spec} />
                 </div>
               )}
@@ -442,7 +511,7 @@ export default function PagesStudio() {
                 </div>
               )}
               {tab === "json" && (
-                <pre className="max-h-[78vh] overflow-auto bg-[#1d1d1b] p-5 text-xs leading-relaxed text-[#e9e4da]">
+                <pre className="no-scrollbar max-h-[78vh] overflow-auto bg-[#1d1d1b] p-5 text-xs leading-relaxed text-[#e9e4da]">
                   {JSON.stringify({ ...spec, brief: undefined }, null, 2)}
                 </pre>
               )}

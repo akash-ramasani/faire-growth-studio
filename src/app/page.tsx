@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PlatformLogo } from "@/components/PlatformLogo";
 
 const PIPELINE = [
   { step: "Brief", body: "Marketer fills a short form. The only free-form input." },
@@ -23,7 +24,7 @@ export default function Home() {
       {/* Faire's hero pattern: full-bleed colour field, white serif headline, white 48px button, underlined secondary link. */}
       <section className="bg-burgundy text-white">
         <div className="mx-auto grid min-h-[520px] max-w-[1440px] items-center gap-10 px-4 py-16 sm:px-8 md:grid-cols-[1.15fr_1fr]">
-          <div>
+          <div className="animate-fade-up">
             <p className="text-sm text-white/80">Marketing engineering · Growth Platform</p>
             <h1 className="mt-4 font-serif text-[38px] leading-[46px] md:text-[52px] md:leading-[64px]">Capabilities marketers can run without us</h1>
             <p className="mt-4 max-w-xl text-sm font-medium leading-5">
@@ -50,14 +51,14 @@ export default function Home() {
               </a>
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="stagger grid grid-cols-2 gap-3">
             {[
               { k: "1 brief", v: "to a published page", bg: "bg-butter" },
               { k: "15 checks", v: "before publish", bg: "bg-peach" },
               { k: "4 markets", v: "with their own claim rules", bg: "bg-cream" },
               { k: "100%", v: "consent enforced in code", bg: "bg-sage" },
-            ].map((s) => (
-              <div key={s.k} className={`${s.bg} p-6 text-ink`}>
+            ].map((s, i) => (
+              <div key={s.k} className={`${s.bg} p-6 text-ink`} style={{ "--i": i + 2 } as React.CSSProperties}>
                 <p className="font-serif text-[38px] leading-[50px]">{s.k}</p>
                 <p className="mt-1 text-sm">{s.v}</p>
               </div>
@@ -68,9 +69,9 @@ export default function Home() {
 
       <section className="mx-auto max-w-[1440px] px-4 py-14 sm:px-8">
         <h2 className="font-serif text-[30px] leading-[38px]">How a landing page gets made</h2>
-        <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
+        <ol className="stagger mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
           {PIPELINE.map((p, i) => (
-            <li key={p.step} className="card relative p-4">
+            <li key={p.step} className="card card-hover relative p-4" style={{ "--i": i } as React.CSSProperties}>
               <span className="text-xs text-muted">0{i + 1}</span>
               <p className="mt-1 text-lg leading-[26px] font-medium">{p.step}</p>
               <p className="mt-2 text-sm leading-snug text-ink-soft">{p.body}</p>
@@ -81,22 +82,27 @@ export default function Home() {
 
       <section className="border-t border-line">
         <div className="mx-auto grid max-w-[1440px] gap-6 px-4 py-14 sm:px-8 md:grid-cols-3">
-          <Link href="/pages" className="card group p-6 transition hover:border-ink">
+          <Link href="/pages" className="card card-hover group p-6">
             <p className="text-sm text-ink-soft">Landing page service</p>
             <p className="mt-2 text-lg leading-[26px] font-medium">Brief → eval-gated page, with A/B variants</p>
             <p className="mt-2 text-sm text-ink-soft">For blog, newsroom, lifecycle and paid teams, in US, UK, French and German markets. Edit inline and the evals re-run as you type. Publishing is blocked until they pass.</p>
             <span className="mt-4 inline-block text-sm font-medium underline-offset-4 group-hover:underline">Open the studio →</span>
           </Link>
-          <Link href="/experiments" className="card group p-6 transition hover:border-ink">
+          <Link href="/experiments" className="card card-hover group p-6">
             <p className="text-sm text-ink-soft">Experiment learning loop</p>
             <p className="mt-2 text-lg leading-[26px] font-medium">A/B results → learnings → better next page</p>
             <p className="mt-2 text-sm text-ink-soft">Bayesian readout with a peeking guard. Winning patterns (not exact wording) become memory that Claude uses for the same audience.</p>
             <span className="mt-4 inline-block text-sm font-medium underline-offset-4 group-hover:underline">Open experiments →</span>
           </Link>
-          <Link href="/audiences" className="card group p-6 transition hover:border-ink">
+          <Link href="/audiences" className="card card-hover group p-6">
             <p className="text-sm text-ink-soft">Self-serve audiences</p>
             <p className="mt-2 text-lg leading-[26px] font-medium">Plain English → validated rule → Braze, Meta, Google</p>
             <p className="mt-2 text-sm text-ink-soft">Claude proposes, the data contract decides. See size, reach and SQL, then build the destination payload with consent applied.</p>
+            <div className="mt-4 flex items-center gap-3" aria-label="Sync destinations">
+              <PlatformLogo platform="braze" size={22} />
+              <PlatformLogo platform="meta" size={22} />
+              <PlatformLogo platform="google" size={22} />
+            </div>
             <span className="mt-4 inline-block text-sm font-medium underline-offset-4 group-hover:underline">Open audiences →</span>
           </Link>
         </div>

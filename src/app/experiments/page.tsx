@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { toast } from "@/components/Toast";
+import { useCountUp } from "@/lib/useCountUp";
 import { extractFeatures } from "@/lib/experiments/features";
 import { confidenceSeries, decision, totals, type Experiment } from "@/lib/experiments/model";
 import { DECISION, posterior, probBeatsControl, relativeLift } from "@/lib/experiments/stats";
@@ -59,11 +61,23 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
       setBusy(false);
     }
   }
-  const run = (days: number) => act(() => simulateExperiment(exp.id, days));
-  const finish = () => act(() => concludeExperiment(exp.id));
+  const run = (days: number) =>
+    act(async () => {
+      const r = await simulateExperiment(exp.id, days);
+      if (r.ok) toast(`Simulated ${days} day${days === 1 ? "" : "s"} of traffic`);
+      else toast(r.error ?? "Simulation failed", { tone: "error" });
+    });
+  const finish = () =>
+    act(async () => {
+      const r = (await concludeExperiment(exp.id)) as { ok: boolean; learnings?: number; error?: string };
+      if (!r.ok) toast(r.error ?? "Could not conclude", { tone: "error" });
+      else if (r.learnings) toast(`Test concluded. ${r.learnings} learning${r.learnings === 1 ? "" : "s"} saved for the next ${brief.audience} page`, { tone: "success" });
+      else toast("Test concluded with no clear winner. Control stays.");
+    });
+  const animatedP = useCountUp(exp.days.length ? p * 100 : 0);
 
   return (
-    <div className="space-y-6">
+    <div key={exp.id} className="animate-fade-in space-y-6">
       <div className="card p-5">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div>
@@ -130,7 +144,7 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
         <div className="mt-5 grid gap-5 border-t border-line pt-5 md:grid-cols-[220px_1fr]">
           <div>
             <p className="text-xs text-muted">P(B beats A)</p>
-            <p className="font-serif text-4xl">{exp.days.length ? pct(p, 0) : "–"}</p>
+            <p className="font-serif text-4xl tabular-nums">{exp.days.length ? `${Math.round(animatedP)}%` : "–"}</p>
             <p className="mt-1 text-xs text-ink-soft">{exp.days.length ? `Lift ${lift >= 0 ? "+" : ""}${pct(lift)}` : "No traffic yet"}</p>
           </div>
           <div>
@@ -150,7 +164,7 @@ function ExperimentDetail({ exp }: { exp: Experiment }) {
         </div>
 
         {exp.outcome && exp.outcome.learnings.length > 0 && (
-          <div className="mt-5 bg-sage/60 p-4 text-sm">
+          <div className="animate-scale-in mt-5 bg-sage/60 p-4 text-sm">
             <p className="font-medium">Learned from this test</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-soft">
               {exp.outcome.learnings.map((l) => (
@@ -244,7 +258,7 @@ function ExperimentsInner() {
             <div className="flex items-center justify-between">
               <p className="section-title mb-0">Learning memory</p>
               {learnings.length > 0 && (
-                <button className="link text-xs text-ink-soft" onClick={clearLearnings}>
+                <button className="link text-xs text-ink-soft" onClick={() => clearLearnings().then(() => toast("Learning memory cleared"))}>
                   Clear
                 </button>
               )}
@@ -254,7 +268,10 @@ function ExperimentsInner() {
               {learnings.map((l) => (
                 <li key={l.id} className="text-sm">
                   <label className="flex cursor-pointer gap-3">
-                    <input type="checkbox" className="check mt-px" checked={l.active} onChange={(e) => setLearningActive(l.id, e.target.checked)} />
+                    <input type="checkbox" className="check mt-px" checked={l.active} onChange={(e) => {
+                        const active = e.target.checked;
+                        setLearningActive(l.id, active).then(() => toast(active ? "Learning switched on" : "Learning switched off. It won't be used in prompts."));
+                      }} />
                     <span className={l.active ? "" : "text-muted line-through"}>
                       {l.text}
                       <span className="block text-xs text-muted">
