@@ -365,7 +365,7 @@ export default function PagesStudio() {
           {!spec ? (
             <div className="card flex min-h-[560px] flex-col items-center justify-center bg-cream p-10 text-center">
               <p className="font-serif text-2xl">Your page preview appears here</p>
-              <p className="mt-2 max-w-sm text-sm text-ink-soft">Pick a preset or write a brief, then generate. Without an API key, the approved template shows how the fallback works.</p>
+              <p className="mt-2 max-w-sm text-sm text-ink-soft">Pick a preset or write a brief, then generate. Claude writes the page; if it fails the checks twice, the approved template takes over.</p>
             </div>
           ) : (
             <div className="card overflow-hidden">
