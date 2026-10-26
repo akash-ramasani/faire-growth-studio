@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { advance, conclude } from "@/lib/experiments/model";
+import { advance, conclude, decision } from "@/lib/experiments/model";
 import { addLearnings, getExperiment, saveExperiment } from "@/lib/db/repo";
 
 const Body = z.discriminatedUnion("action", [
@@ -19,6 +19,9 @@ export async function POST(request: Request, { params }: RouteContext<"/api/expe
     await saveExperiment(advance(exp, parsed.data.days));
     return Response.json({ ok: true });
   }
+  // Same stopping rule as the UI, enforced here: no calling a test before it has enough evidence.
+  const d = decision(exp);
+  if (d.status === "collecting") return Response.json({ ok: false, error: d.reason }, { status: 409 });
   const { experiment, learnings } = conclude(exp);
   await saveExperiment(experiment);
   await addLearnings(learnings);
