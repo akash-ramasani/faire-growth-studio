@@ -1,32 +1,68 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 // "?" help tips. Open on hover, keyboard focus or tap; close on Escape, blur or tapping elsewhere.
-// The bubble uses Faire's dark #333 surface so it reads like the toasts.
+// The bubble uses Faire's dark #333 surface so it reads like the toasts. It renders in a portal on
+// <body> with fixed positioning, so cards, animations and overflow can never cover or clip it.
+
+const GAP = 8;
+const MARGIN = 8;
 
 export function HelpTip({ text, align = "center", label = "More info" }: { text: React.ReactNode; align?: "start" | "center" | "end"; label?: string }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number; placement: "top" | "bottom" } | null>(null);
   const id = useId();
-  const ref = useRef<HTMLSpanElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const tipRef = useRef<HTMLSpanElement>(null);
+
+  // Place above the button (or below if there's no room), aligned as requested, kept inside the viewport.
+  const place = useCallback(() => {
+    const btn = triggerRef.current?.getBoundingClientRect();
+    const tip = tipRef.current?.getBoundingClientRect();
+    if (!btn || !tip) return;
+    const vw = document.documentElement.clientWidth;
+    const preferred = align === "start" ? btn.left - 4 : align === "end" ? btn.right - tip.width + 4 : btn.left + btn.width / 2 - tip.width / 2;
+    const left = Math.min(Math.max(preferred, MARGIN), vw - tip.width - MARGIN);
+    const above = btn.top - GAP - tip.height;
+    const placement = above >= MARGIN ? "top" : "bottom";
+    setPos({ left, top: placement === "top" ? above : btn.bottom + GAP, placement });
+  }, [align]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    place();
+  }, [open, place]);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    const onDown = (e: PointerEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (!triggerRef.current?.contains(t) && !tipRef.current?.contains(t)) setOpen(false);
+    };
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointerdown", onDown);
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
     };
-  }, [open]);
+  }, [open, place]);
 
-  const pos = align === "start" ? "left-0" : align === "end" ? "right-0" : "left-1/2 -translate-x-1/2";
+  const close = () => {
+    setOpen(false);
+    setPos(null);
+  };
 
   return (
-    <span ref={ref} className="relative inline-flex align-middle" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <span className="inline-flex align-middle" onMouseEnter={() => setOpen(true)} onMouseLeave={close}>
       <button
+        ref={triggerRef}
         type="button"
         aria-label={label}
         aria-describedby={open ? id : undefined}
@@ -38,20 +74,33 @@ export function HelpTip({ text, align = "center", label = "More info" }: { text:
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
+        onBlur={close}
         className="ml-1.5 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border border-line bg-white text-[11px] leading-none font-medium text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:border-ink focus-visible:text-ink focus-visible:outline-none"
       >
         ?
       </button>
-      {open && (
-        <span
-          id={id}
-          role="tooltip"
-          className={`animate-scale-in absolute bottom-full z-40 mb-2 w-[260px] rounded-[4px] bg-ink px-3 py-2.5 text-left text-xs leading-[18px] font-normal tracking-normal text-white normal-case shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] ${pos}`}
-        >
-          {text}
-        </span>
-      )}
+      {open &&
+        createPortal(
+          <span
+            ref={tipRef}
+            id={id}
+            role="tooltip"
+            style={{
+              position: "fixed",
+              top: pos?.top ?? 0,
+              left: pos?.left ?? 0,
+              // Measured first while hidden, then shown in place: no flash at the corner.
+              visibility: pos ? "visible" : "hidden",
+              transformOrigin: pos?.placement === "bottom" ? "top center" : "bottom center",
+            }}
+            className={`pointer-events-none z-[60] w-[260px] max-w-[calc(100vw-16px)] rounded-[4px] bg-ink px-3 py-2.5 text-left text-xs leading-[18px] font-normal tracking-normal text-white normal-case shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] ${
+              pos ? "animate-scale-in" : ""
+            }`}
+          >
+            {text}
+          </span>,
+          document.body,
+        )}
     </span>
   );
 }
