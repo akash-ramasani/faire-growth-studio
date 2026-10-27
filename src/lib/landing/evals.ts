@@ -121,6 +121,12 @@ export function runEvals(spec: PageSpec): EvalResult[] {
     unqualified.length ? `Unqualified: ${unqualified.join(", ")}` : "Offer terms are qualified where mentioned",
   );
 
+  // The only link on a page is the CTA, which code builds. Copy must not carry its own links or
+  // contact details, so a published demo page can't be used to point people somewhere else.
+  const CONTACT = /https?:\/\/|\bwww\.|\b[a-z0-9-]+\.(?:com|net|org|io|co|app|shop|store|xyz|info|biz|us|uk|de|fr|ru|cn)\b|[^\s@]+@[^\s@]+\.[a-z]{2,}|\+?\d[\d\s().-]{8,}\d/i;
+  const contact = copy.find((t) => CONTACT.test(t));
+  add("contact", "No links, emails or phone numbers in the copy", "blocking", !contact, contact ? `Found "${contact.match(CONTACT)?.[0]}"` : "Only the built-in button link");
+
   const leftovers = copy.filter((t) => /lorem|ipsum|\bTODO\b|\[[^\]]*\]|\{\{|\}\}/i.test(t));
   add("placeholders", "No placeholder text", "blocking", leftovers.length === 0, leftovers.length ? `Found: "${leftovers[0]}"` : "Clean");
 

@@ -28,7 +28,12 @@ Testimonials: ${Object.entries(TESTIMONIALS)
   .map(([k, t]) => `${k} (${t.audience}): "${t.quote}"`)
   .join("; ")}`;
 
-export type GenerateOptions = { variantHint?: string; learnings?: string[] };
+export type GenerateOptions = {
+  variantHint?: string;
+  learnings?: string[];
+  /** When set, skip the model entirely (for example, the daily AI budget is spent) and use the template. */
+  skipModelReason?: string;
+};
 
 function briefPrompt(brief: Brief, { variantHint, learnings = [] }: GenerateOptions = {}): string {
   const market = LOCALE_CONFIG[brief.locale];
@@ -118,6 +123,7 @@ export async function generatePage(brief: Brief, opts: GenerateOptions = {}): Pr
     };
   };
 
+  if (opts.skipModelReason) return fallback(opts.skipModelReason);
   if (!getClient()) return fallback("No ANTHROPIC_API_KEY configured, so the approved template was used");
 
   try {

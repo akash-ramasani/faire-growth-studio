@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { guard, readJson } from "@/lib/security";
 import { advance, conclude, decision } from "@/lib/experiments/model";
 import { addLearnings, getExperiment, saveExperiment } from "@/lib/db/repo";
 
@@ -8,8 +9,10 @@ const Body = z.discriminatedUnion("action", [
 ]);
 
 export async function POST(request: Request, { params }: RouteContext<"/api/experiments/[id]">) {
+  const blocked = await guard(request, "experiment");
+  if (blocked) return blocked;
   const { id } = await params;
-  const parsed = Body.safeParse(await request.json().catch(() => null));
+  const parsed = Body.safeParse(await readJson(request));
   if (!parsed.success) return Response.json({ ok: false, error: "Unknown action" }, { status: 400 });
   const exp = await getExperiment(id);
   if (!exp) return Response.json({ ok: false, error: "Experiment not found" }, { status: 404 });

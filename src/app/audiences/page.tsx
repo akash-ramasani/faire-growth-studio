@@ -129,7 +129,9 @@ export default function Audiences() {
   useEffect(() => {
     const t = setTimeout(async () => {
       const res = await fetch("/api/audiences/preview", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ draft }) });
-      setPreview(await res.json());
+      const data = await res.json().catch(() => ({ ok: false, error: "Could not reach the server" }));
+      // Contract errors come back as a list; guard refusals (rate limit, etc.) as a single message.
+      setPreview(data.ok ? data : { ok: false, errors: data.errors ?? [data.error ?? "Something went wrong"] });
       setPlan(null);
     }, 250);
     return () => clearTimeout(t);
@@ -170,7 +172,7 @@ export default function Audiences() {
         toast(`${data.plan.label} payload ready: ${fmtCount(data.plan.eligible)} records, ${fmtCount(data.plan.excludedForConsent)} excluded for consent`, { tone: "success" });
       } else {
         setPlan(null);
-        setSyncErrors(data.errors);
+        setSyncErrors(data.errors ?? [data.error ?? "Something went wrong"]);
       }
     } finally {
       setSyncing(false);

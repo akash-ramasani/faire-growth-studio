@@ -18,6 +18,10 @@ const WHY: Record<string, string> = {
   readability: "Advisory: simpler copy (grade 9 or below) usually converts better.",
   offer: "Advisory: the offer from the brief should appear somewhere on the page.",
   focus: "Advisory: the categories you picked in the brief should be featured.",
+  contact: "Pages can't contain their own links, emails or phone numbers. The only link is the button, which the system builds, so a page can't send people somewhere unexpected.",
+  brandFacts: "We only know a featured brand's name and category, so any claim about its history, origin, awards or ingredients would be made up.",
+  storefront: "A page featuring a brand must send retailers to that brand's real Faire storefront.",
+  unrequestedOffer: "Advisory: the page mentions an offer (like Net 60 or free shipping) that the brief didn't ask for.",
 };
 
 export function EvalSummary({ evals }: { evals: EvalResult[] }) {

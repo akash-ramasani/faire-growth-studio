@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { guard, readJson } from "@/lib/security";
 import { listPublished, savePublished } from "@/lib/db/repo";
 import { SourceSchema, verifySpec } from "@/lib/landing/verify";
 
@@ -9,7 +10,9 @@ export async function GET() {
 const Body = z.object({ spec: z.unknown(), source: SourceSchema });
 
 export async function POST(request: Request) {
-  const parsed = Body.safeParse(await request.json().catch(() => null));
+  const blocked = await guard(request, "publish");
+  if (blocked) return blocked;
+  const parsed = Body.safeParse(await readJson(request));
   if (!parsed.success) return Response.json({ ok: false, error: "Invalid request" }, { status: 400 });
   // The Publish button is disabled on failing evals, but the gate that matters is this one.
   const verified = verifySpec(parsed.data.spec);

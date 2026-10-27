@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { guard, readJson } from "@/lib/security";
 import { validateRule } from "@/lib/audiences/contract";
 import { buildSync, SYNC_DESTINATIONS, type SyncDestination } from "@/lib/audiences/sync";
 import { logSync, queryAudience } from "@/lib/db/repo";
@@ -10,7 +11,9 @@ const Body = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = Body.safeParse(await request.json().catch(() => null));
+  const blocked = await guard(request, "write");
+  if (blocked) return blocked;
+  const parsed = Body.safeParse(await readJson(request));
   if (!parsed.success) return Response.json({ ok: false, errors: ["Name the audience (3-60 characters) and pick a destination"] });
   const checked = validateRule(parsed.data.draft);
   if (!checked.ok) return Response.json({ ok: false, errors: checked.errors });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { guard, readJson } from "@/lib/security";
 import { createExperiment } from "@/lib/experiments/model";
 import { listExperiments, saveExperiment } from "@/lib/db/repo";
 import { SourceSchema, verifySpec } from "@/lib/landing/verify";
@@ -11,7 +12,9 @@ const Arm = z.object({ spec: z.unknown(), source: SourceSchema });
 const Body = z.object({ a: Arm, b: Arm });
 
 export async function POST(request: Request) {
-  const parsed = Body.safeParse(await request.json().catch(() => null));
+  const blocked = await guard(request, "experiment");
+  if (blocked) return blocked;
+  const parsed = Body.safeParse(await readJson(request));
   if (!parsed.success) return Response.json({ ok: false, error: "Send variants A and B" }, { status: 400 });
   const a = verifySpec(parsed.data.a.spec);
   const b = verifySpec(parsed.data.b.spec);

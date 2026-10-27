@@ -294,7 +294,7 @@ function ExperimentsInner() {
           <div className="card p-4">
             <div className="flex items-center justify-between">
               <SectionTitle help={H.memory} className="mb-0">Learning memory</SectionTitle>
-              {learnings.length > 0 && (
+              {learnings.length > 0 && process.env.NODE_ENV !== "production" && (
                 <button className="link text-xs text-ink-soft" onClick={() => clearLearnings().then(() => toast("Learning memory cleared"))}>
                   Clear
                 </button>

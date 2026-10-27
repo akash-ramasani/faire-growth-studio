@@ -64,7 +64,8 @@ export default function Monitoring() {
             or repair rate is the alert signal; in production these events would go to the warehouse and page on-call.
           </p>
         </div>
-        {runs.length > 0 && (
+        {/* Clearing shared data is disabled on the public deployment (the API refuses it too). */}
+        {runs.length > 0 && process.env.NODE_ENV !== "production" && (
           <button
             className="btn-outline btn-sm"
             onClick={() => {

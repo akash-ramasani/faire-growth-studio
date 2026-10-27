@@ -11,10 +11,16 @@ export function getClient(): Anthropic | null {
   return client;
 }
 
+/**
+ * Public-safe description of a model failure. Shown to visitors and stored in the run log, so it
+ * never includes raw provider messages (which can echo request details); those go to server logs.
+ */
 export function describeError(err: unknown): string {
-  if (err instanceof Anthropic.RateLimitError) return "Rate limited by the Claude API";
-  if (err instanceof Anthropic.AuthenticationError) return "Invalid ANTHROPIC_API_KEY";
-  if (err instanceof Anthropic.APIConnectionError) return "Could not reach the Claude API";
-  if (err instanceof Anthropic.APIError) return `Claude API error ${err.status ?? ""}: ${err.message}`.trim();
-  return err instanceof Error ? err.message : String(err);
+  console.error("claude call failed", err);
+  if (err instanceof Anthropic.RateLimitError) return "The AI service is busy (rate limited)";
+  if (err instanceof Anthropic.AuthenticationError) return "The AI service rejected this deployment's credentials";
+  if (err instanceof Anthropic.APIConnectionError) return "Could not reach the AI service";
+  if (err instanceof Anthropic.APIError) return `The AI service returned an error${err.status ? ` (${err.status})` : ""}`;
+  // Errors we throw ourselves (refusal, truncation, schema mismatch) are already public-safe.
+  return err instanceof Error && err.message.length < 140 ? err.message : "Unexpected error while calling the AI service";
 }

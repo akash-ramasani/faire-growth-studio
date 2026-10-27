@@ -76,6 +76,12 @@ CREATE TABLE IF NOT EXISTS retailers (
 );
 CREATE INDEX IF NOT EXISTS retailers_country_type ON retailers (country, retailer_type);
 
+CREATE TABLE IF NOT EXISTS rate_events (
+  key TEXT NOT NULL,
+  at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS rate_events_key_at ON rate_events (key, at);
+
 CREATE TABLE IF NOT EXISTS audience_syncs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   at INTEGER NOT NULL,

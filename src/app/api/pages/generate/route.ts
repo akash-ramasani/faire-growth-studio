@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { aiBudgetExhausted, guard, readJson } from "@/lib/security";
 import { inExplorationBucket, learningPrompt, relevantLearnings } from "@/lib/experiments/model";
 import { listLearnings, logRun } from "@/lib/db/repo";
 import { generatePage } from "@/lib/landing/generate";
@@ -12,14 +13,18 @@ const Body = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = Body.safeParse(await request.json().catch(() => null));
+  const blocked = await guard(request, "generate");
+  if (blocked) return blocked;
+  const parsed = Body.safeParse(await readJson(request));
   if (!parsed.success) {
     return Response.json({ error: "Invalid brief", issues: parsed.error.issues }, { status: 400 });
   }
   const { brief, variantHint, applyLearnings } = parsed.data;
   const exploring = Boolean(applyLearnings) && inExplorationBucket(brief.campaignName);
   const learnings = applyLearnings && !exploring ? relevantLearnings(await listLearnings(), brief).map(learningPrompt) : [];
-  const result = await generatePage(brief, { variantHint, learnings });
+  // Cost guard: past today's token budget, serve the approved template instead of calling Claude.
+  const skipModelReason = (await aiBudgetExhausted()) ? "Today's AI budget for this demo is used up, so the approved template was used" : undefined;
+  const result = await generatePage(brief, { variantHint, learnings, skipModelReason });
   await logRun({
     at: Date.now(),
     kind: "page",
