@@ -1,6 +1,6 @@
 # Growth Studio
 
-**Live demo:** https://faire-growth-studio.vercel.app
+**Live demo:** https://faire.akashramasani.com/
 
 A working prototype of the two "what you'll build first" problems from Faire's **Growth Platform, Marketing Engineer** role:
 
