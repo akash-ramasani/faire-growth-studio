@@ -24,7 +24,17 @@ export function useCountUp(target: number, durationMs = 600): number {
       else from.current = target;
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    // Backgrounded tabs and some embedded browsers pause animation frames; make sure the real
+    // number always lands even if the animation never runs.
+    const settle = setTimeout(() => {
+      cancelAnimationFrame(raf);
+      from.current = target;
+      setValue(target);
+    }, durationMs + 150);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(settle);
+    };
   }, [target, durationMs]);
 
   return value;
