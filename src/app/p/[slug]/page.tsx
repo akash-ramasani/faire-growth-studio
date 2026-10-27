@@ -20,12 +20,13 @@ export default async function PublishedLandingPage({ params }: PageProps<"/p/[sl
   if (!page) notFound();
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-ink px-4 py-2 text-xs text-white sm:px-6">
-        <span className="min-w-0 break-all">
+      {/* One line at every width: the long CTA URL truncates (full value on hover) instead of wrapping. */}
+      <div className="flex items-center gap-4 whitespace-nowrap bg-ink px-4 py-2 text-xs text-white sm:px-6">
+        <span className="min-w-0 flex-1 truncate" title={page.spec.ctaUrl}>
           Demo page <strong>/{page.spec.slug}</strong>, published {new Date(page.publishedAt).toLocaleDateString("en-US")}. Not a live Faire page. CTA links to{" "}
           <span className="opacity-70">{page.spec.ctaUrl}</span>
         </span>
-        <Link href="/pages" className="link">
+        <Link href="/pages" className="link shrink-0">
           Back to studio
         </Link>
       </div>
